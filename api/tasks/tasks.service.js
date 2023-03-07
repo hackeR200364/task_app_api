@@ -26,7 +26,7 @@ module.exports = {
                 data.taskDes,
                 data.taskName,
                 data.taskNotification,
-                data.taskStatus,
+                'Pending',
                 data.taskTime,
                 data.taskType
             ],
@@ -98,7 +98,19 @@ module.exports = {
                         }
                     );
 
-                    console.log(count);
+                    let taskWords ="," + data.taskName + "," + data.taskDes + "," + data.taskNotification + "," + data.taskType + ",";
+                    const cleanedText = taskWords.replace(/[^\w\s,]/g, ' ').replace(/(?<!,) +| +(?=,)/g, ',').replace(/\s/g, "") ;
+
+                    pool.query(
+                        `UPDATE words SET words = CONCAT(words, ?) WHERE uid = ?`,
+                        [cleanedText, data.uid],
+                        (error, result, field) => {
+                            if (error) {
+                                return callback(error);
+                            }
+                        }
+                    );
+
                     return callback(null, count);
                 }
 
@@ -127,10 +139,10 @@ module.exports = {
         );
     },
 
-    getAllTasks: (data, callback) => {
+    getAllTasks: (uid, callback) => {
         pool.query(
             `select * from tasks where uid=?`,
-            [data.uid],
+            [uid],
             (error, results, fields) => {
                 if (error)
                 {
@@ -159,20 +171,25 @@ module.exports = {
         );
     },
 
+// say I have a sql databse of tasks from where I want the tasks which is taskType is business and taskStatus is pending and the uid is re10
+
     getAllTasksSpecificTypeStatus: (data, callback) => {
         pool.query(
-            `select * from tasks where uid=? and taskType=? and taskStatus=?`,
+            `select * from tasks where taskType=? and taskStatus=? and uid=?`,
             [
-                data.uid,
                 data.taskType,
-                data.taskStatus
+                data.taskStatus,
+                data.uid,
             ],
-            (error, results, fields) => {
+            (error, result, fields) => {
+                console.log(data.uid);
+                console.log(data.taskType);
+                console.log(data.taskStatus);
                 if (error) {
                     console.log(error);
                     return callback(error);
                 }
-                return callback(null, results);
+                return callback(null, result);
             }
         );
     },
@@ -258,7 +275,7 @@ module.exports = {
                                         return callback(taskTypeError);
                                     }
                 
-                                    if (taskTypeResult["taskType"] == "Business") {
+                                    if (taskTypeResult[0]["taskType"] == "Business") {
                                         pool.query(
                                             `update users set taskBusiness = taskBusiness - 1 where uid=?`,
                                             [data.uid],
@@ -272,7 +289,7 @@ module.exports = {
                                         );
                                     }
                 
-                                    if (taskTypeResult["taskType"] == "Personal") {
+                                    if (taskTypeResult[0]["taskType"] == "Personal") {
                                         pool.query(
                                             `update users set taskPersonal = taskPersonal - 1 where uid=?`,
                                             [data.uid],
@@ -340,7 +357,7 @@ module.exports = {
                     return callback(taskStatusError);
                 }
 
-                if (taskStatusResult["taskStatus"] == "Deleted") {
+                if (taskStatusResult[0]["taskStatus"] == "Deleted") {
                     pool.query(
                         `update tasks set taskStatus='Pending' where notificationID=? and uid=?`,
                         [
@@ -365,7 +382,7 @@ module.exports = {
                                         return callback(taskTypeError);
                                     }
                 
-                                    if (taskTypeResult["taskType"] == "Business") {
+                                    if (taskTypeResult[0]["taskType"] == "Business") {
                                         pool.query(
                                             `update users set taskBusiness = taskBusiness + 1 where uid=?`,
                                             [data.uid],
@@ -379,7 +396,7 @@ module.exports = {
                                         );
                                     }
                 
-                                    if (taskTypeResult["taskType"] == "Personal") {
+                                    if (taskTypeResult[0]["taskType"] == "Personal") {
                                         pool.query(
                                             `update users set taskPersonal = taskPersonal + 1 where uid=?`,
                                             [data.uid],
@@ -425,7 +442,6 @@ module.exports = {
                     );
                 }
 
-                return callback(taskStatusError);
             }
         );
 
@@ -612,18 +628,128 @@ module.exports = {
             }
         );
 
+        let words = data.taskName + "," + data.taskDes + ","  + data.taskNotification + ","  + data.taskType;
+        const cleanedText = words.replace(/[^\w\s,]/g, ' ').replace(/(?<!,) +| +(?=,)/g, ',').replace(/\s/g, "") + ",";
+                        pool.query(
+                        `UPDATE words SET words = CONCAT(words, ',?') WHERE uid = ?`,
+                        [cleanedText, data.uid],
+                        (error, result, field) => {
+                            if (error) {
+                                return callback(error);
+                            }
+                        }
+                    );
+
+        // pool.query(
+        //     `select * from tasks where uid=? and notificationID=?`,
+        //     [data.uid, data.notificationID],
+        //     (error, results, fields) => {
+        //         if (error)
+        //         {
+        //             console.log(error);
+        //             return callback(error);
+        //         }
+                
+        //     }
+        // )
+    },
+
+    getTaskDone: (uid, callback) => {
         pool.query(
-            `select * from tasks where uid=? and notificationID=?`,
-            [data.uid, data.notificationID],
-            (error, results, fields) => {
-                if (error)
-                {
+            `select taskDone from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
                     console.log(error);
                     return callback(error);
                 }
-                
-                return callback(null, results);
+                return callback(null, result);
             }
-        )
-    }
+        );
+    },
+
+    getUsrPoints: (uid, callback) => {
+        pool.query(
+            `select usrPoints from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
+    getTaskPersonal: (uid, callback) => {
+        pool.query(
+            `select taskPersonal from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
+    getTaskPending: (uid, callback) => {
+        pool.query(
+            `select taskPending from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
+    getTaskBusiness: (uid, callback) => {
+        pool.query(
+            `select taskBusiness from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
+    getTaskCount: (uid, callback) => {
+        pool.query(
+            `select taskCount from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
+    getTaskDelete: (uid, callback) => {
+        pool.query(
+            `select taskDelete from users where uid=?`,
+            [uid],
+            (error, result, field) => {
+                if (error) {
+                    console.log(error);
+                    return callback(error);
+                }
+                return callback(null, result);
+            }
+        );
+    },
+
 }

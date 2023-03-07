@@ -32,14 +32,14 @@ module.exports = {
                 if(!results)
                 {
                     return res.json({
-                        success: 0,
+                        success: false,
                         message: "Record not found"
                     });
                     
                 }
     
                 return res.json({
-                    success: 1,
+                    success: true,
                     message: "Registration successful",
                     token:jsonToken,
                     data: results,

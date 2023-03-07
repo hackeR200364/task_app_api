@@ -10,7 +10,14 @@ const {
     doneTask,
     unDoneTask,
     undoTask,
-    updateTask
+    updateTask,
+    getTaskDone,
+    getUsrPoints,
+    getTaskPersonal,
+    getTaskPending,
+    getTaskBusiness,
+    getTaskCount,
+    getTaskDelete
 } = require("./tasks.service");
 
 module.exports = {
@@ -57,7 +64,7 @@ module.exports = {
     },
 
     getAllTasks: (req, res) => {
-        getAllTasks(req.body, (err, results) => {
+        getAllTasks(req.params.uid, (err, results) => {
             if (err) {
                 console.log(err);
                 return;
@@ -239,11 +246,192 @@ module.exports = {
                 })
             }
 
-            return res.json({
+            getTaskDetails(req.body, (error, result) => {
+                if (error)
+                {
+                    console.log(error);
+                    return;
+                }
+
+                if (!result)
+                {
+                    return res.json({
+                        success: false,
+                        message: "No task found",
+                    });
+                }
+                
+                return res.json({
                 success: true,
                 message: "Your task is successfully updated",
-                data: results[0]
+                data: results[0],
+                details: result[0]
             })
+            })
+
+            
         })
-    }
+    },
+
+    getUsrTaskDone: (req, res) => {
+        let uid = req.params.uid;
+        getTaskDone(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+
+    getUsrTotalPoints: (req, res) => {
+        let uid = req.params.uid;
+        getUsrPoints(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+
+    getUsrTaskPersonal: (req, res) => {
+        let uid = req.params.uid;
+        getTaskPersonal(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+
+    getUsrTaskPending: (req, res) => {
+        let uid = req.params.uid;
+        getTaskPending(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+
+    getUsrTaskBusiness: (req, res) => {
+        let uid = req.params.uid;
+        getTaskBusiness(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+    
+    getUsrTaskCount: (req, res) => {
+        let uid = req.params.uid;
+        getTaskCount(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+
+    getUsrTaskDelete: (req, res) => {
+        let uid = req.params.uid;
+        getTaskDelete(uid, (err, result) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            
+            if (!result) {
+                return res.json({
+                    success: false,
+                    message: "No task found"
+                })
+            }
+            
+            return res.json({
+                success: true,
+                message: "Got the task details",
+                data: result[0]
+            });
+        });
+    },
+    
 }

@@ -19,13 +19,25 @@ module.exports = {
                 0
             ],
             (error, results, fields) => {
-                if(error)
-                {
+                if (error) {
                     return callBack(error);
                 }
+
+                pool.query(
+                    `insert into words(words, uid)values('hello',?)`,
+                    [data.uid],
+                    (error, result, field) => {
+                    if (error) {
+                        console.log(error);
+                    }
+            },
+        );
+
                 return callBack(null, results);
             }
-        )
+        );
+
+        
     },
 
     getUserByUserID: (id,callback) => {
