@@ -1,20 +1,21 @@
-const { createTask,
-    getSpecificTaskDetails,
-    getAllTasks,
-    getAllTasksCpecificTypeOfUser,
-    getAllTasksSpecificTypeStatusOfUser,
-    deleteSpecificTask,
-    doneUserTask,
-    unDoneUserTask,
-    undoSpecificTask,
-    updateSpecificTask,
-    getUsrTaskDone,
-    getUsrTotalPoints,
-    getUsrTaskPersonal,
-    getUsrTaskPending,
-    getUsrTaskBusiness,
-    getUsrTaskCount,
-    getUsrTaskDelete
+const {
+  createTask,
+  getSpecificTaskDetails,
+  getAllTasks,
+  getAllTasksCpecificTypeOfUser,
+  getAllTasksSpecificTypeStatusOfUser,
+  deleteSpecificTask,
+  doneUserTask,
+  unDoneUserTask,
+  undoSpecificTask,
+  updateSpecificTask,
+  getUsrTaskDone,
+  getUsrTotalPoints,
+  getUsrTaskPersonal,
+  getUsrTaskPending,
+  getUsrTaskBusiness,
+  getUsrTaskCount,
+  getUsrTaskDelete,
 } = require("./tasks.controller");
 const taskRouter = require("express").Router();
 const { checkToken } = require("../../auth/token_validation");
@@ -22,8 +23,16 @@ const { checkToken } = require("../../auth/token_validation");
 taskRouter.post("/createTask", checkToken, createTask);
 taskRouter.get("/getTaskDetails", checkToken, getSpecificTaskDetails);
 taskRouter.get("/getAllTasks/:uid", checkToken, getAllTasks);
-taskRouter.get("/getAllTasksSpecificType", checkToken, getAllTasksCpecificTypeOfUser);
-taskRouter.get("/getTasksOfTypeStatus", checkToken, getAllTasksSpecificTypeStatusOfUser);
+taskRouter.get(
+  "/getAllTasksSpecificType",
+  checkToken,
+  getAllTasksCpecificTypeOfUser
+);
+taskRouter.get(
+  "/getTasksOfTypeStatus",
+  checkToken,
+  getAllTasksSpecificTypeStatusOfUser
+);
 taskRouter.post("/deleteTask", checkToken, deleteSpecificTask);
 taskRouter.post("/doneTask", checkToken, doneUserTask);
 taskRouter.post("/unDoneTask", checkToken, unDoneUserTask);
