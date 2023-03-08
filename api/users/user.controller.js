@@ -221,4 +221,26 @@ module.exports = {
       // });
     });
   },
+
+  forgotPass: (req, res) => {
+    getUserByUserEmail(req.params.usrEmail, (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      if (!results) {
+        return res.status(404).json({
+          success: false,
+          message: "No account found. Please register",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Got your account",
+        data: results,
+      });
+    });
+  },
 };
