@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const userRouter = require("./api/users/user.router");
 const tasksRouter = require("./api/tasks/tasks.router");
+// const expressLayouts = require("express-ejs-layouts");
 
 // app.get("/api", (req, res) => (
 //     res.json({
@@ -12,6 +13,8 @@ const tasksRouter = require("./api/tasks/tasks.router");
 // ));
 
 app.use(express.json());
+// app.use(expressLayouts);
+// app.set("view engine", "ejs");
 
 app.use("/api/users", userRouter);
 app.use("/api/tasks", tasksRouter);

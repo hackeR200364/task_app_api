@@ -3,6 +3,11 @@ const {
   create,
   getUserByUserEmail,
   getUserByUserID,
+  storeResetToken,
+  passResetUserExists,
+  updatePassword,
+  deleteResetPassToken,
+  checkPassResetTokenAndTime,
 } = require("../users/user.service");
 
 const { genSaltSync, hashSync, compareSync } = require("bcrypt");
@@ -236,11 +241,155 @@ module.exports = {
         });
       }
 
-      return res.status(200).json({
-        success: true,
-        message: "Got your account",
-        data: results,
+      // const email = res.params.usrEmail;
+      // const emailPrefix = email.substring(0, indexOf("@"));
+      const jsonToken = sign({ result: results }, process.env.ENCRYPTION_KEY);
+      passResetUserExists(results.uid, (err, existsResults) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        if (!existsResults[0]) {
+          storeResetToken(results.uid, jsonToken, (err, result) => {
+            if (err) {
+              console.log(err);
+              return;
+            }
+
+            if (!result) {
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            return res.json({
+              success: true,
+              message: "Password reset token sent",
+              token: jsonToken,
+              validity: "15 minutes",
+              usrEmail: results.usrEmail,
+              uid: results.uid,
+            });
+          });
+        }
+
+        if (existsResults[0]) {
+          console.log(existsResults);
+          return res.json({
+            success: false,
+            message: "Duplicate id, Please CANCEL it and retry",
+          });
+        }
       });
     });
+  },
+
+  updateUserPassword: (req, res) => {
+    const salt = genSaltSync(10);
+    req.body.usrPassword = hashSync(req.body.usrPassword, salt);
+    checkPassResetTokenAndTime(
+      req.body.resetToken,
+      (checkResetTokenTimeError, checkResetTokenTimeResults) => {
+        if (checkResetTokenTimeError) {
+          console.log(checkResetTokenTimeError);
+          return;
+        }
+
+        if (!checkResetTokenTimeResults) {
+          return res.json({
+            success: false,
+            message: "No id found",
+          });
+        }
+
+        updatePassword(
+          req.body.usrEmail,
+          req.body.usrPassword,
+          (error, results) => {
+            if (error) {
+              console.log(error);
+              return;
+            }
+
+            if (!results) {
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            getUserByUserEmail(req.body.usrEmail, (err, userDetails) => {
+              if (err) {
+                console.log(err);
+                return;
+              }
+
+              if (!userDetails) {
+                return res.json({
+                  success: false,
+                  message: "No records found",
+                });
+              }
+
+              deleteResetPassToken(
+                req.body.uid,
+                req.body.resetToken,
+                (deleteResetTokenError, deleteResetTokenResults) => {
+                  if (deleteResetTokenError) {
+                    console.log(deleteResetTokenError);
+                    return;
+                  }
+
+                  if (!deleteResetTokenResults) {
+                    return res.json({
+                      success: false,
+                      message: "Something went wrong",
+                    });
+                  }
+
+                  const jsonToken = sign(
+                    { result: userDetails },
+                    process.env.ENCRYPTION_KEY
+                  );
+                  return res.json({
+                    success: true,
+                    message: "Your password updated successfully",
+                    token: jsonToken,
+                    data: userDetails,
+                  });
+                }
+              );
+            });
+          }
+        );
+      }
+    );
+  },
+
+  cancelResetPassToken: (req, res) => {
+    deleteResetPassToken(
+      req.params.uid,
+      req.params.resetToken,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        if (!result) {
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: "Existing id is deleted successfully",
+        });
+      }
+    );
   },
 };
