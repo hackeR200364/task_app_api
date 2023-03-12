@@ -54,16 +54,84 @@ module.exports = {
 
   getUserByUserEmail: (email, callback) => {
     pool.query(
-      `select * from users where usrEmail = ?`,
+      `select * from users where usrEmail=?`,
       [email],
       (error, results, fields) => {
         if (error) {
-          callback(error);
+          return callback(error);
         }
         return callback(null, results[0]);
       }
     );
   },
 
-  
+  storeResetToken: (uid, resetToken, callBack) => {
+    pool.query(
+      `insert into pass_reset(uid, resetToken, expirationTime)values(?,?,NOW() + interval 15 minute)`,
+      [uid, resetToken],
+      (error, result, fields) => {
+        if (error) {
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
+
+  passResetUserExists: (uid, callBack) => {
+    pool.query(
+      `select * from pass_reset where uid=?`,
+      [uid],
+      (error, results, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+        return callBack(null, results);
+      }
+    );
+  },
+
+  updatePassword: (email, password, callBack) => {
+    pool.query(
+      `update users usrPassword set usrPassword=? where usrEmail=?`,
+      [password, email],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
+
+        return callBack(null, results);
+      }
+    );
+  },
+
+  deleteResetPassToken: (uid, resetToken, callBack) => {
+    pool.query(
+      `delete from pass_reset where uid=? and resetToken=?`,
+      [uid, resetToken],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
+
+        return callBack(null, results);
+      }
+    );
+  },
+
+  checkPassResetTokenAndTime: (resetToken, callBack) => {
+    pool.query(`select uid from pass_reset where resetToken=? and expirationTime > NOW()`, [resetToken], (err, results, fields) => {
+      if (err)
+      {
+        console.log(err);
+        return callBack(err);
+      }
+      
+      return callBack(null, results);
+    });
+  }
 };
