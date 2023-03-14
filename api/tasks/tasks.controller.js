@@ -83,7 +83,7 @@ module.exports = {
   },
 
   getAllTasksCpecificTypeOfUser: (req, res) => {
-    getAllTasksCpecificType(req.body, (err, results) => {
+    getAllTasksCpecificType(req.params, (err, results) => {
       if (err) {
         console.log(err);
         return;
