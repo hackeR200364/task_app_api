@@ -24,7 +24,7 @@ taskRouter.post("/createTask", checkToken, createTask);
 taskRouter.get("/getTaskDetails", checkToken, getSpecificTaskDetails);
 taskRouter.get("/getAllTasks/:uid", checkToken, getAllTasks);
 taskRouter.get(
-  "/getAllTasksSpecificType",
+  "/getAllTasksSpecificType/:uid/:taskType",
   checkToken,
   getAllTasksCpecificTypeOfUser
 );
