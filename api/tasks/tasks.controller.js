@@ -104,7 +104,7 @@ module.exports = {
   },
 
   getAllTasksSpecificTypeStatusOfUser: (req, res) => {
-    getAllTasksSpecificTypeStatus(req.body, (err, results) => {
+    getAllTasksSpecificTypeStatus(req.params, (err, results) => {
       if (err) {
         console.log(err);
         return;
