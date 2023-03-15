@@ -29,7 +29,7 @@ taskRouter.get(
   getAllTasksCpecificTypeOfUser
 );
 taskRouter.get(
-  "/getTasksOfTypeStatus",
+  "/getTasksOfTypeStatus/:uid/:taskType/:taskStatus",
   checkToken,
   getAllTasksSpecificTypeStatusOfUser
 );
