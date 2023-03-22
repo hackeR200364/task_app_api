@@ -18,6 +18,7 @@ app.use(express.json());
 
 app.use("/api/users", userRouter);
 app.use("/api/tasks", tasksRouter);
+app.use("/profile", express.static("profilePics"));
 
 app.listen(process.env.APP_PORT, () => {
   console.log("server up and running", process.env.APP_PORT);

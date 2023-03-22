@@ -3,12 +3,14 @@ const pool = require("../../config/database");
 module.exports = {
   create: (data, callBack) => {
     pool.query(
-      `insert into users(usrFirstName, usrLastName, usrPassword, uid, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         data.usrFirstName,
         data.usrLastName,
         data.usrPassword,
         data.uid,
+        data.usrFirstName + data.usrLastName,
+        data.usrDescription,
         0,
         0,
         0,
@@ -32,6 +34,21 @@ module.exports = {
             }
           }
         );
+
+        return callBack(null, results);
+      }
+    );
+  },
+
+  updateProfilePicture: (usrProfilePic, uid, callBack) => {
+    pool.query(
+      `update users usrProfilePic set usrProfilePic=? where uid=?`,
+      [usrProfilePic, uid],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
 
         return callBack(null, results);
       }
@@ -124,14 +141,33 @@ module.exports = {
   },
 
   checkPassResetTokenAndTime: (resetToken, callBack) => {
-    pool.query(`select uid from pass_reset where resetToken=? and expirationTime > NOW()`, [resetToken], (err, results, fields) => {
-      if (err)
-      {
-        console.log(err);
-        return callBack(err);
+    pool.query(
+      `select uid from pass_reset where resetToken=? and expirationTime > NOW()`,
+      [resetToken],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
+
+        return callBack(null, results);
       }
-      
-      return callBack(null, results);
-    });
-  }
+    );
+  },
+
+  getTaskRecords: (uid, callBack) => {
+    pool.query(
+      `select taskBusiness, taskPersonal, taskCount, taskDelete, taskPending, taskDone, usrPoints from users where uid=?`[
+        uid
+      ],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
+
+        return callBack(null, results);
+      }
+    );
+  },
 };
