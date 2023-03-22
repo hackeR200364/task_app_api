@@ -8,10 +8,15 @@ const {
   updatePassword,
   deleteResetPassToken,
   checkPassResetTokenAndTime,
+  getTaskRecords,
+  updateProfilePicture,
 } = require("../users/user.service");
 
 const { genSaltSync, hashSync, compareSync } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
+const fs = require("fs");
+const multer = require("multer");
+const path = require("path");
 
 module.exports = {
   createUser: (req, res) => {
@@ -47,27 +52,50 @@ module.exports = {
             process.env.ENCRYPTION_KEY
           );
 
-          getUserByUserID(body.uid, (usrDetailErr, usrDetails) => {
-            if (usrDetailErr) {
-              console.log(usrDetailErr);
+          const profilePictureUrl = `${req.protocol}://${req.hostname}/profile/${req.file.filename}`;
+
+          updateProfilePicture(profilePictureUrl, body.uid, (err, result) => {
+            if (err) {
+              console.log(err);
               return;
             }
 
-            if (!usrDetails) {
+            if (!result) {
               return res.json({
                 success: false,
-                message: "Registration failed",
+                message: "Something wenrt wrong",
               });
             }
 
-            if (usrDetails) {
-              return res.json({
-                success: true,
-                message: "Registration successful",
-                token: jsonToken,
-                data: usrDetails,
-              });
-            }
+            getUserByUserID(body.uid, (usrDetailErr, usrDetails) => {
+              if (usrDetailErr) {
+                console.log(usrDetailErr);
+                return;
+              }
+
+              if (!usrDetails) {
+                return res.json({
+                  success: false,
+                  message: "Registration failed",
+                });
+              }
+
+              if (usrDetails) {
+                fs.mkdir(`profiles/${req.body.uid}`, (err) => {
+                  if (err) throw err;
+                  console.log(
+                    `Folder created successfully with name ${req.body.uid}`
+                  );
+                });
+
+                return res.json({
+                  success: true,
+                  message: "Registration successful",
+                  token: jsonToken,
+                  data: usrDetails,
+                });
+              }
+            });
           });
         });
       }
@@ -391,5 +419,27 @@ module.exports = {
         });
       }
     );
+  },
+
+  getUsrTaskRecords: (req, res) => {
+    getTaskRecords(req.params.uid, (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      if (!results) {
+        return res.status(404).json({
+          success: false,
+          message: "No resords found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Got your records",
+        data: results,
+      });
+    });
   },
 };
