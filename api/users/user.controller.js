@@ -81,12 +81,12 @@ module.exports = {
               }
 
               if (usrDetails) {
-                fs.mkdir(`profiles/${req.body.uid}`, (err) => {
-                  if (err) throw err;
-                  console.log(
-                    `Folder created successfully with name ${req.body.uid}`
-                  );
-                });
+                // fs.mkdir(`profiles/${req.body.uid}`, (err) => {
+                //   if (err) throw err;
+                //   console.log(
+                //     `Folder created successfully with name ${req.body.uid}`
+                //   );
+                // });
 
                 return res.json({
                   success: true,
@@ -438,7 +438,41 @@ module.exports = {
       return res.status(200).json({
         success: true,
         message: "Got your records",
-        data: results,
+        data: results[0],
+      });
+    });
+  },
+
+  getCompletionRate: (req, res) => {
+    getTaskRecords(req.params.uid, (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      if (!results) {
+        return res.status(404).json({
+          success: false,
+          message: "No resords found",
+        });
+      }
+
+      const taskCount = results[0].taskCount;
+      const taskDelete = results[0].taskDelete;
+      const taskDone = results[0].taskDone;
+      let completionRate = Math.round(
+        (taskDone / (taskCount - taskDelete)) * 100
+      );
+
+      if (taskCount == 0) {
+        completionRate = 0;
+      }
+
+      console.log(completionRate);
+      return res.status(200).json({
+        success: true,
+        message: "Got your completion rate",
+        completionRate: completionRate,
       });
     });
   },

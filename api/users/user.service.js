@@ -3,7 +3,7 @@ const pool = require("../../config/database");
 module.exports = {
   create: (data, callBack) => {
     pool.query(
-      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, usrProfession, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         data.usrFirstName,
         data.usrLastName,
@@ -11,6 +11,7 @@ module.exports = {
         data.uid,
         data.usrFirstName + data.usrLastName,
         data.usrDescription,
+        data.usrProfession,
         0,
         0,
         0,
@@ -157,9 +158,8 @@ module.exports = {
 
   getTaskRecords: (uid, callBack) => {
     pool.query(
-      `select taskBusiness, taskPersonal, taskCount, taskDelete, taskPending, taskDone, usrPoints from users where uid=?`[
-        uid
-      ],
+      `select taskBusiness, taskPersonal, taskCount, taskDelete, taskPending, taskDone, usrPoints from users where uid=?`,
+      [uid],
       (err, results, fields) => {
         if (err) {
           console.log(err);
