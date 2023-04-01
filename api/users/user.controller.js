@@ -10,6 +10,7 @@ const {
   checkPassResetTokenAndTime,
   getTaskRecords,
   updateProfilePicture,
+  hasAccount,
 } = require("../users/user.service");
 
 const { genSaltSync, hashSync, compareSync } = require("bcrypt");
@@ -24,7 +25,7 @@ module.exports = {
     const salt = genSaltSync(10);
     body.usrPassword = hashSync(body.usrPassword, salt);
 
-    getUserByUserEmail(body.usrEmail, (error, results) => {
+    hasAccount(body.uid, (error, results) => {
       if (error) {
         console.log(error);
         return res.status(500).json({
@@ -33,7 +34,9 @@ module.exports = {
         });
       }
 
-      if (!results) {
+      // console.log(results[0].count);
+
+      if (results[0].count == 0) {
         create(body, (err, result) => {
           if (err) {
             console.log(err);
@@ -100,7 +103,7 @@ module.exports = {
         });
       }
 
-      if (results) {
+      if (results[0].count != 0) {
         return res.json({
           success: false,
           message: "You already have an account. Please try to login",

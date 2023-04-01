@@ -170,4 +170,19 @@ module.exports = {
       }
     );
   },
+
+  hasAccount: (uid, callBack) => {
+    pool.query(
+      `SELECT COUNT(*) AS count FROM users where uid=?`,
+      [uid],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return callBack(err);
+        }
+
+        return callBack(null, results);
+      }
+    );
+  }
 };
