@@ -7,6 +7,8 @@ const {
   cancelResetPassToken,
   getUsrTaskRecords,
   getCompletionRate,
+  verification,
+  resendOTP,
 } = require("./user.controller");
 const { checkToken } = require("../../auth/token_validation");
 const multer = require("multer");
@@ -14,7 +16,7 @@ const path = require("path");
 const express = require("express");
 
 const storage = multer.diskStorage({
-  destination: "./profilePics",
+  destination: "/home4/achiviec/public_html/profilePics",
   filename: (req, file, cb) => {
     const parsed = path.parse(file.originalname);
     const fileName = path.join(parsed.dir, parsed.name);
@@ -40,7 +42,9 @@ router.post("/googleLogin", googleLogin);
 router.post("/forgotPass/:usrEmail", forgotPass);
 router.post("/updateUserPassword", updateUserPassword);
 router.post("/cancelResetPass/:resetToken/:uid", cancelResetPassToken);
+router.post("/verification/:uid/:verificationToken/:otp", verification);
 router.get("/taskRecords/:uid", checkToken, getUsrTaskRecords);
 router.get("/completionRate/:uid", checkToken, getCompletionRate);
+router.post("/resendOTP/:uid/:verificationToken", resendOTP);
 
 module.exports = router;

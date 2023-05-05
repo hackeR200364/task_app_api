@@ -57,6 +57,7 @@ module.exports = {
 
       return res.json({
         success: true,
+        message: "Got your tasks",
         data: results,
       });
     });
@@ -77,6 +78,7 @@ module.exports = {
       }
       return res.json({
         success: true,
+        message: "Got your tasks",
         data: results,
       });
     });
@@ -98,6 +100,7 @@ module.exports = {
 
       return res.json({
         success: true,
+        message: "Got your tasks",
         data: results,
       });
     });
@@ -119,6 +122,7 @@ module.exports = {
 
       return res.json({
         success: true,
+        message: "Got your tasks",
         data: results,
       });
     });
@@ -254,7 +258,6 @@ module.exports = {
         return res.json({
           success: true,
           message: "Your task is successfully updated",
-          data: results[0],
           details: result[0],
         });
       });
