@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const userRouter = require("./api/users/user.router");
 const tasksRouter = require("./api/tasks/tasks.router");
+const newsRouter = require("./api/news/news.router");
 // const expressLayouts = require("express-ejs-layouts");
 // const WebSocket = require("ws");
 // const server = require("http").createServer(app);
@@ -19,15 +20,17 @@ app.use(express.json());
 // app.use(expressLayouts);
 // app.set("view engine", "ejs");
 
-app.get("/api_start", (req, res) => {
+app.get("/v1/production/api_start", (req, res) => {
   return res.json({
     success: true,
-    message: "Server is working properly",
+    message: "Server is working properly in production mode",
   });
 });
-app.use("/api/users", userRouter);
-app.use("/api/tasks", tasksRouter);
-app.use("/profile", express.static("profilePics"));
+app.use("/v1/production/api/users", userRouter);
+app.use("/v1/production/api/tasks", tasksRouter);
+app.use("/v1/production/newsBloc", newsRouter);
+app.use("/v1/production/profile", express.static("profilePics"));
+app.use("/v1/production/bloc", express.static("blocPics"));
 
 app.listen(process.env.APP_PORT, () => {
   console.log("server up and running", process.env.APP_PORT);

@@ -1,9 +1,10 @@
+const { callbackPromise } = require("nodemailer/lib/shared");
 const pool = require("../../config/database");
 
 module.exports = {
   create: (data, callBack) => {
     pool.query(
-      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, usrProfession, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, usrProfession, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints,verified)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,false)`,
       [
         data.usrFirstName,
         data.usrLastName,
@@ -31,12 +32,13 @@ module.exports = {
           [data.uid],
           (error, result, field) => {
             if (error) {
-              console.log(error);
+              console.error(error);
+              return callBack(error);
             }
+
+            return callBack(null, results);
           }
         );
-
-        return callBack(null, results);
       }
     );
   },
@@ -65,7 +67,7 @@ module.exports = {
         if (error) {
           return callback(error);
         }
-        return callback(null, results[0]);
+        return callback(null, results);
       }
     );
   },
@@ -184,5 +186,112 @@ module.exports = {
         return callBack(null, results);
       }
     );
-  }
+  },
+
+  storeOTP: (uid, verificationToken, otp, callBack) => {
+    pool.query(
+      `insert into user_verification(uid, verificationToken, otp, expirationTime)values(?,?,?,NOW() + interval 10 minute)`,
+      [uid, verificationToken, otp],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
+
+  updateOTP: (uid, verificationToken, otp, callBack) => {
+    pool.query(
+      `update user_verification set verificationToken=? , otp=?, expirationTime=NOW()+interval 10 minute where uid=?`,
+      [verificationToken, otp, uid],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
+
+  expiryCheck: (uid, verificationToken, callBack) => {
+    pool.query(
+      `select * from user_verification where uid=? and verificationToken=?`,
+      [uid, verificationToken],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+        //error
+        return callBack(null, result);
+      }
+    );
+  },
+
+  // NOW() + interval 10 minute
+
+  deleteOTP: (uid, verificationToken, otp, callBack) => {
+    pool.query(
+      `delete from user_verification where uid=? and verificationToken=? and otp=?`,
+      [uid, verificationToken, otp],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
+
+  updateVerificationStatus: (uid, callBack) => {
+    pool.query(
+      `update users set verified=true where uid=?`,
+      [uid],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
+
+  checkVerificationStatus: (uid, callBack) => {
+    pool.query(
+      `select * from users where uid=?`,
+      [uid],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+        //error
+        return callBack(null, result);
+      }
+    );
+  },
+
+  resend: (uid, verificationToken, callBack) => {
+    pool.query(
+      `select * from user_verification where uid=? and expirationTime > NOW() and verificationToken=?`,
+      [uid, verificationToken],
+      (error, result, fields) => {
+        if (error) {
+          console.log(error);
+          return callBack(error);
+        }
+
+        return callBack(null, result);
+      }
+    );
+  },
 };
