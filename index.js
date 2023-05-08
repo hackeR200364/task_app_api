@@ -28,9 +28,10 @@ app.get("/v1/production/api_start", (req, res) => {
 });
 app.use("/v1/production/api/users", userRouter);
 app.use("/v1/production/api/tasks", tasksRouter);
-app.use("/v1/production/newsBloc", newsRouter);
+app.use("/v1/production/api/newsBloc", newsRouter);
 app.use("/v1/production/profile", express.static("profilePics"));
 app.use("/v1/production/bloc", express.static("blocPics"));
+app.use("/v1/production/news", express.static("newsPics"));
 
 app.listen(process.env.APP_PORT, () => {
   console.log("server up and running", process.env.APP_PORT);

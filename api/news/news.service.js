@@ -1,4 +1,17 @@
 const pool = require("../../config/database");
+const uuid = require("uuid");
+
+function generateContentId() {
+  const timestamp = Date.now().toString(36);
+  const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let contentId = "";
+  for (let i = 0; i < 10; i++) {
+    contentId += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return contentId + timestamp;
+}
 
 module.exports = {
   create: (data, blocProfile, callback) => {
@@ -61,6 +74,64 @@ module.exports = {
         }
 
         return callback(null, result[0]);
+      }
+    );
+  },
+
+  newsPost: (data, images, thumbImage, callback) => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    console.log(timestamp);
+    const reportID = generateContentId();
+    pool.query(
+      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportBlocID, reportUsrID)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        reportID,
+        images,
+        thumbImage,
+        data.reportDate,
+        data.reportTime,
+        data.reportHeadline,
+        data.reportDes,
+        data.reportLocation,
+        0,
+        0,
+        data.reportBlocID,
+        data.reportUsrID,
+      ],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, reportID);
+      }
+    );
+  },
+
+  newsCountIncrease: (uid, callback) => {
+    pool.query(
+      `update users set reportCount=reportCount+1 where uid=?`,
+      [uid],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  newsDetails: (uid, reportUsrID, callback) => {
+    pool.query(
+      `select * from report_details where reportID=? and reportUsrID=?`,
+      [reportUsrID, uid],
+      (error, result, field) => {
+        if (error) {
+          console.error(error);
+          return callback(error);
+        }
+        return callback(null, result);
       }
     );
   },
