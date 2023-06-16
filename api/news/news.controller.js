@@ -10,6 +10,8 @@ const {
   likedRecord,
   reportCommentRecord,
   reportCommentIncrease,
+  reportCommentRecordList,
+  reportCommentsCount,
 } = require("./news.service");
 
 module.exports = {
@@ -209,6 +211,51 @@ module.exports = {
             });
           }
         );
+      }
+    );
+  },
+
+  commentList: (req, res) => {
+    const offset = (req.query.page - 1) * req.query.limit;
+    reportCommentRecordList(
+      offset,
+      req.query.limit,
+      req.params.reportID,
+      (err, comments) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+        if (comments.length < 1) {
+          return res.json({
+            success: true,
+            message: "No comments",
+          });
+        }
+
+        reportCommentsCount(req.params.reportID, (err, commentsRecordCount) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          const totalPage = Math.ceil(
+            +commentsRecordCount[0]?.count / req.query.limit
+          );
+
+          return res.json({
+            success: true,
+            message: "Got the comments",
+            totalPage: totalPage,
+            comments: comments,
+          });
+        });
       }
     );
   },
