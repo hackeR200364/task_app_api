@@ -13,6 +13,18 @@ function generateContentId() {
   return contentId + timestamp;
 }
 
+function generateCommentId() {
+  const timestamp = Date.now().toString(36);
+  const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let contentId = "";
+  for (let i = 0; i < 10; i++) {
+    contentId += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return contentId + timestamp;
+}
+
 module.exports = {
   create: (data, blocProfile, callback) => {
     const blocID = data.blocName + "-" + data.usrID;
@@ -132,6 +144,70 @@ module.exports = {
           return callback(error);
         }
         return callback(null, result);
+      }
+    );
+  },
+
+  reportLikeIncrease: (uid, reportID, callback) => {
+    pool.query(
+      `update report_details set reportLikes=reportLikes+1 where reportID=?`,
+      [reportID, uid],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  likedRecord: (reportID, likedByUsrID, likedToBlocID, callback) => {
+    pool.query(
+      `insert into liked_record(reportID, likedByUsrID, likedToBlocID)values(?,?,?)`,
+      [reportID, likedByUsrID, likedToBlocID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  reportCommentIncrease: (uid, reportID, callback) => {
+    pool.query(
+      `update report_details set reportComments=reportComments+1 where reportID=?`,
+      [reportID, uid],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  reportCommentRecord: (
+    reportID,
+    toUsrID,
+    toBlocID,
+    fromUsrID,
+    comment,
+    callback
+  ) => {
+    let commentID = generateCommentId();
+    pool.query(
+      `insert into comments_record(reportID, toUsrID, toBlocID, fromUsrID, comment, commentID)values(?,?,?,?,?,?)`,
+      [reportID, toUsrID, toBlocID, fromUsrID, comment, commentID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, error);
       }
     );
   },

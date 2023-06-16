@@ -6,6 +6,10 @@ const {
   newsPost,
   newsCountIncrease,
   newsDetails,
+  reportLikeIncrease,
+  likedRecord,
+  reportCommentRecord,
+  reportCommentIncrease,
 } = require("./news.service");
 
 module.exports = {
@@ -134,5 +138,78 @@ module.exports = {
         data: reportRes[0],
       });
     });
+  },
+
+  particularReportLike: (req, res) => {
+    reportLikeIncrease(
+      req.params.usrID,
+      req.params.reportID,
+      (err, reportRes) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        likedRecord(
+          req.params.reportID,
+          req.params.usrID,
+          req.params.blocID,
+          (err, reportRes) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+            return res.json({
+              success: true,
+              message: "Liked",
+            });
+          }
+        );
+      }
+    );
+  },
+
+  particularReportComment: (req, res) => {
+    reportCommentRecord(
+      req.body.reportID,
+      req.body.toUsrID,
+      req.body.toBlocID,
+      req.body.fromUsrID,
+      req.body.comment,
+      (err, reportRes) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        reportCommentIncrease(
+          req.body.usrID,
+          req.body.reportID,
+          (err, reportRes) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            return res.json({
+              success: true,
+              message: "Comment Published",
+            });
+          }
+        );
+      }
+    );
   },
 };
