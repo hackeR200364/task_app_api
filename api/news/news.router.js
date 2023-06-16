@@ -4,6 +4,8 @@ const {
   createBloc,
   reportAllDetails,
   postReport,
+  particularReportLike,
+  particularReportComment,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -58,3 +60,5 @@ module.exports = newsRouter;
 newsRouter.post("/createBloc", upload.single("blocProfile"), createBloc);
 newsRouter.post("/postNews", newsUpload, postReport);
 newsRouter.get("/getReportDetails/:usrID/:reportUsrID", reportAllDetails);
+newsRouter.post("/likeReport/:usrID/:reportID/:blocID", particularReportLike);
+newsRouter.post("/commentReport", particularReportComment);
