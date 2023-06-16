@@ -12,6 +12,8 @@ const {
   reportCommentIncrease,
   reportCommentRecordList,
   reportCommentsCount,
+  reportCommentDelete,
+  reportCommentCountDecrease,
 } = require("./news.service");
 
 module.exports = {
@@ -177,7 +179,7 @@ module.exports = {
     );
   },
 
-  particularReportComment: (req, res) => {
+  particularReportCommentPost: (req, res) => {
     reportCommentRecord(
       req.body.reportID,
       req.body.toUsrID,
@@ -258,5 +260,32 @@ module.exports = {
         });
       }
     );
+  },
+
+  particularReportCommentDelete: (req, res) => {
+    reportCommentDelete(req.params.commentID, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      reportCommentCountDecrease(req.params.reportID, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: "Your comment was deleted",
+        });
+      });
+    });
   },
 };

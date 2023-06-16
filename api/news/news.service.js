@@ -239,4 +239,31 @@ module.exports = {
       }
     );
   },
+
+  reportCommentDelete: (commentID, callback) => {
+    pool.query(
+      `delete from comments_record where commentID=?`,
+      [commentID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  reportCommentCountDecrease: (reportID, callback) => {
+    pool.query(
+      `update report_details set reportComments=reportComments-1 where reportID=?`,
+      [reportID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+        return callback(null, result);
+      }
+    );
+  },
 };
