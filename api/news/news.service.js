@@ -211,4 +211,32 @@ module.exports = {
       }
     );
   },
+
+  reportCommentRecordList: (offset, limit, reportID, callback) => {
+    pool.query(
+      `select * from comments_record where reportID=? limit ? offset ?`,
+      [reportID, +limit, +offset],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  reportCommentsCount: (reportID, callback) => {
+    pool.query(
+      `select count(*) as count from comments_record where reportID=?`,
+      [reportID],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
 };
