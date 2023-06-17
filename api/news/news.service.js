@@ -266,4 +266,57 @@ module.exports = {
       }
     );
   },
+
+  allReportsList: (offset, limit, callback) => {
+    pool.query(
+      `select * from report_details limit ? offset ?`,
+      [+limit, +offset],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+        return callback(null, results);
+      }
+    );
+  },
+
+  allLikedReports: (likedByUsrID, callback) => {
+    pool.query(
+      `select reportID from liked_record where likedByUsrID=?`,
+      [likedByUsrID],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+        return callback(null, results);
+      }
+    );
+  },
+
+  allcommentedReports: (fromUsrID, callback) => {
+    pool.query(
+      `select reportID from comments_record where fromUsrID=?`,
+      [fromUsrID],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  allReportsCount: (callback) => {
+    pool.query(
+      `select count(*) as count from report_details`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };

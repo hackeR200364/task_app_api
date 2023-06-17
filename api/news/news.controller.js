@@ -1,4 +1,5 @@
 require("dotenv").config();
+const req = require("express/lib/request");
 const {
   create,
   duplicateBlocCheck,
@@ -14,7 +15,12 @@ const {
   reportCommentsCount,
   reportCommentDelete,
   reportCommentCountDecrease,
+  allReportsList,
+  allReportsCount,
+  allLikedReports,
+  allcommentedReports,
 } = require("./news.service");
+const res = require("express/lib/response");
 
 module.exports = {
   createBloc: (req, res) => {
@@ -233,8 +239,8 @@ module.exports = {
         }
         if (comments.length < 1) {
           return res.json({
-            success: true,
-            message: "No comments",
+            success: false,
+            message: "No more comments",
           });
         }
 
@@ -284,6 +290,104 @@ module.exports = {
         return res.json({
           success: true,
           message: "Your comment was deleted",
+        });
+      });
+    });
+  },
+
+  allReports: (req, res) => {
+    const offset = (req.query.page - 1) * req.query.limit;
+
+    allReportsCount((err, reportCount) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      const totalPage = Math.ceil(+reportCount[0]?.count / req.query.limit);
+
+      allReportsList(offset, req.query.limit, (err, reportsList) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "No reports",
+          });
+        }
+
+        if (reportsList.length < 1) {
+          return res.json({
+            success: false,
+            message: "No more reports",
+          });
+        }
+
+        allLikedReports(req.params.usrID, (err, likedReportsList) => {
+          if (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: "No liked reports",
+            });
+          }
+
+          if (likedReportsList.length < 1) {
+            return res.json({
+              success: true,
+              reports: reportsList,
+              totalPage: totalPage,
+            });
+          }
+
+          console.log(likedReportsList);
+
+          const likedRecordSet = new Set(
+            likedReportsList.map((record) => record.reportID)
+          );
+
+          const reportsWithLikedStatus = reportsList.map((report) => {
+            const liked = likedRecordSet.has(report.reportID);
+            return { ...report, liked: liked };
+          });
+
+          allcommentedReports(req.params.usrID, (err, commentedReportsList) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            if (commentedReportsList.length < 1) {
+              return res.json({
+                success: true,
+                reports: reportsWithLikedStatus,
+                totalPage: totalPage,
+              });
+            }
+
+            const commentedRecordSet = new Set(
+              commentedReportsList.map((record) => record.reportID)
+            );
+
+            const reportsWithCommentedStatus = reportsWithLikedStatus.map(
+              (report) => {
+                const commented = commentedRecordSet.has(report.reportID);
+                return { ...report, commented: commented };
+              }
+            );
+
+            return res.json({
+              success: true,
+              message: "Got all reports",
+              reports: reportsWithCommentedStatus,
+              totalPage: totalPage,
+            });
+          });
         });
       });
     });
