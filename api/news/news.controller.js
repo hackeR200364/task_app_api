@@ -19,6 +19,8 @@ const {
   allReportsCount,
   allLikedReports,
   allcommentedReports,
+  reportLikeDelete,
+  reportLikedDeleteDecrease,
 } = require("./news.service");
 const res = require("express/lib/response");
 
@@ -388,6 +390,33 @@ module.exports = {
               totalPage: totalPage,
             });
           });
+        });
+      });
+    });
+  },
+
+  particularReportLikeDelete: (req, res) => {
+    reportLikeDelete(req.params.reportID, req.params.usrID, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      reportLikedDeleteDecrease(req.params.reportID, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: "Like deleted",
         });
       });
     });

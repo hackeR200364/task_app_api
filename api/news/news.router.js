@@ -9,6 +9,7 @@ const {
   particularReportCommentPost,
   particularReportCommentDelete,
   allReports,
+  particularReportLikeDelete,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -71,3 +72,7 @@ newsRouter.post(
 );
 newsRouter.get("/comments/:reportID", commentList);
 newsRouter.get("/allReports/:usrID", allReports);
+newsRouter.post(
+  "/reportLikeDelete/:usrID/:reportID",
+  particularReportLikeDelete
+);
