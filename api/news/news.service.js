@@ -267,6 +267,34 @@ module.exports = {
     );
   },
 
+  reportLikeDelete: (reportID, likedByUsrID, callback) => {
+    pool.query(
+      `delete from liked_record where reportID=? and likedByUsrID=?`,
+      [reportID, likedByUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  reportLikedDeleteDecrease: (reportID, callback) => {
+    pool.query(
+      `update report_details set reportLikes=reportLikes-1 where reportID=?`,
+      [reportID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
   allReportsList: (offset, limit, callback) => {
     pool.query(
       `select * from report_details limit ? offset ?`,
