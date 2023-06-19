@@ -27,6 +27,10 @@ const {
   particularReportUnSaveDecrease,
   followBloc,
   blocFollowerIncrease,
+  usrFollowingIncrease,
+  unFollowBloc,
+  blocFollowerDecrease,
+  usrFollowingDecrease,
 } = require("./news.service");
 const res = require("express/lib/response");
 
@@ -523,12 +527,61 @@ module.exports = {
             });
           }
 
-          return res.json({
-            success: true,
-            message: "Followed",
+          usrFollowingIncrease(req.body.fromUsrID, (err, result) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            return res.json({
+              success: true,
+              message: "Followed",
+              followed: true,
+            });
           });
         });
       }
     );
+  },
+
+  unfollowBloc: (req, res) => {
+    unFollowBloc(req.params.blocID, req.params.fromUsrID, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      blocFollowerDecrease(req.params.blocID, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        usrFollowingDecrease(req.params.fromUsrID, (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Unfollowed",
+            followed: false,
+          });
+        });
+      });
+    });
   },
 };

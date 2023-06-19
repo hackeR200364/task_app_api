@@ -448,4 +448,60 @@ module.exports = {
       }
     );
   },
+
+  usrFollowingIncrease: (usrID, callback) => {
+    pool.query(
+      `update users set following=following+1 where uid=?`,
+      [usrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  unFollowBloc: (blocID, fromUsrID, callback) => {
+    pool.query(
+      `delete from bloc_follow_record where blocID=? and fromUsrID=?`,
+      [blocID, fromUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, error);
+      }
+    );
+  },
+
+  blocFollowerDecrease: (blocID, callback) => {
+    pool.query(
+      `update bloc_details set followers=followers-1 where blocID=?`,
+      [blocID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  usrFollowingDecrease: (usrID, callback) => {
+    pool.query(
+      `update users set following=following-1 where uid=?`,
+      [usrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };
