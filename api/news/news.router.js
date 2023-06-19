@@ -13,6 +13,7 @@ const {
   saveReport,
   unsaveReport,
   followBloc,
+  unfollowBloc,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -82,3 +83,4 @@ newsRouter.post(
 newsRouter.post("/saveReport", saveReport);
 newsRouter.post("/unsaveReport/:reportID/:fromUsrID", unsaveReport);
 newsRouter.post("/follow", followBloc);
+newsRouter.post("/unfollow/:blocID/:fromUsrID", unfollowBloc);
