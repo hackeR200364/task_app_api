@@ -29,7 +29,7 @@ module.exports = {
   create: (data, blocProfile, callback) => {
     const blocID = data.blocName + "-" + data.usrID;
     pool.query(
-      `insert into bloc_details(usrName, usrID, usrEmail, blocID, blocName, blocDes, usrPhoneNo, blocProfile, blocLat, blocLong)value(?,?,?,?,?,?,?,?,?,?)`,
+      `insert into bloc_details(usrName, usrID, usrEmail, blocID, blocName, blocDes, usrPhoneNo, blocProfile, blocLat, blocLong, followers)value(?,?,?,?,?,?,?,?,?,?,?)`,
       [
         data.usrName,
         data.usrID,
@@ -41,6 +41,7 @@ module.exports = {
         blocProfile,
         data.blocLat,
         data.blocLong,
+        0,
       ],
       (error, results, fields) => {
         if (error) {
@@ -403,6 +404,41 @@ module.exports = {
     pool.query(
       `update report_details set reportSaved=reportSaved-1 where reportID=?`,
       [reportID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  followBloc: (
+    blocID,
+    fromUsrID,
+    followedLat,
+    followedLong,
+    toUsrID,
+    callback
+  ) => {
+    pool.query(
+      `insert into bloc_follow_record(blocID, fromUsrID, followedLat, followedLong, toUsrID)values(?,?,?,?,?)`,
+      [blocID, fromUsrID, followedLat, followedLong, toUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  blocFollowerIncrease: (blocID, callback) => {
+    pool.query(
+      `update bloc_details set followers=followers+1 where blocID=?`,
+      [blocID],
       (error, result, field) => {
         if (error) {
           return callback(error);
