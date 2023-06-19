@@ -25,6 +25,8 @@ const {
   particularReportSaveIncrease,
   particularReportUnSave,
   particularReportUnSaveDecrease,
+  followBloc,
+  blocFollowerIncrease,
 } = require("./news.service");
 const res = require("express/lib/response");
 
@@ -490,6 +492,40 @@ module.exports = {
             success: true,
             message: "Successfully unsaved",
             saved: false,
+          });
+        });
+      }
+    );
+  },
+
+  followBloc: (req, res) => {
+    followBloc(
+      req.body.blocID,
+      req.body.fromUsrID,
+      req.body.followedLat,
+      req.body.followedLong,
+      req.body.toUsrID,
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        blocFollowerIncrease(req.body.blocID, (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Followed",
           });
         });
       }
