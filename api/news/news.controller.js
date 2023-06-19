@@ -22,7 +22,9 @@ const {
   reportLikeDelete,
   reportLikedDeleteDecrease,
   particularReportSave,
-  particularReportSaveDecrease,
+  particularReportSaveIncrease,
+  particularReportUnSave,
+  particularReportUnSaveDecrease,
 } = require("./news.service");
 const res = require("express/lib/response");
 
@@ -182,6 +184,7 @@ module.exports = {
             return res.json({
               success: true,
               message: "Liked",
+              liked: true,
             });
           }
         );
@@ -419,6 +422,7 @@ module.exports = {
         return res.json({
           success: true,
           message: "Like deleted",
+          liked: false,
         });
       });
     });
@@ -441,7 +445,7 @@ module.exports = {
           });
         }
 
-        particularReportSaveDecrease(req.body.reportID, (err, result) => {
+        particularReportSaveIncrease(req.body.reportID, (err, result) => {
           if (err) {
             console.error(err);
             return res.json({
@@ -453,6 +457,39 @@ module.exports = {
           return res.json({
             success: true,
             message: "Successfully saved",
+            saved: true,
+          });
+        });
+      }
+    );
+  },
+
+  unsaveReport: (req, res) => {
+    particularReportUnSave(
+      req.params.reportID,
+      req.params.fromUsrID,
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        particularReportUnSaveDecrease(req.params.reportID, (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Successfully unsaved",
+            saved: false,
           });
         });
       }
