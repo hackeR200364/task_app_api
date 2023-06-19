@@ -371,9 +371,37 @@ module.exports = {
     );
   },
 
-  particularReportSaveDecrease: (reportID, callback) => {
+  particularReportSaveIncrease: (reportID, callback) => {
     pool.query(
       `update report_details set reportSaved=reportSaved+1 where reportID=?`,
+      [reportID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  particularReportUnSave: (reportID, fromUsrID, callback) => {
+    pool.query(
+      `delete from saved_record where reportID=? and fromUsrID=?`,
+      [reportID, fromUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  particularReportUnSaveDecrease: (reportID, callback) => {
+    pool.query(
+      `update report_details set reportSaved=reportSaved-1 where reportID=?`,
       [reportID],
       (error, result, field) => {
         if (error) {

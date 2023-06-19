@@ -11,6 +11,7 @@ const {
   allReports,
   particularReportLikeDelete,
   saveReport,
+  unsaveReport,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -78,3 +79,4 @@ newsRouter.post(
   particularReportLikeDelete
 );
 newsRouter.post("/saveReport", saveReport);
+newsRouter.post("/unsaveReport/:reportID/:fromUsrID", unsaveReport);
