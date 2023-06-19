@@ -21,6 +21,8 @@ const {
   allcommentedReports,
   reportLikeDelete,
   reportLikedDeleteDecrease,
+  particularReportSave,
+  particularReportSaveDecrease,
 } = require("./news.service");
 const res = require("express/lib/response");
 
@@ -420,5 +422,40 @@ module.exports = {
         });
       });
     });
+  },
+
+  saveReport: (req, res) => {
+    particularReportSave(
+      req.body.reportID,
+      req.body.usrLat,
+      req.body.usrLong,
+      req.body.toUsrID,
+      req.body.fromUsrID,
+      req.body.toBlocID,
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        particularReportSaveDecrease(req.body.reportID, (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Successfully saved",
+          });
+        });
+      }
+    );
   },
 };

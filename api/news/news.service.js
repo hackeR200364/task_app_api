@@ -95,7 +95,7 @@ module.exports = {
     console.log(timestamp);
     const reportID = generateContentId();
     pool.query(
-      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportBlocID, reportUsrID)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         reportID,
         images,
@@ -105,6 +105,7 @@ module.exports = {
         data.reportHeadline,
         data.reportDes,
         data.reportLocation,
+        0,
         0,
         0,
         data.reportBlocID,
@@ -338,6 +339,42 @@ module.exports = {
   allReportsCount: (callback) => {
     pool.query(
       `select count(*) as count from report_details`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  particularReportSave: (
+    reportID,
+    usrLat,
+    usrLong,
+    toUsrID,
+    fromUsrID,
+    toBlocID,
+    callback
+  ) => {
+    pool.query(
+      `insert into saved_record(reportID, usrLat, usrLong, toUsrID, fromUsrID, toBlocID)values(?,?,?,?,?,?)`,
+      [reportID, usrLat, usrLong, toUsrID, fromUsrID, toBlocID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  particularReportSaveDecrease: (reportID, callback) => {
+    pool.query(
+      `update report_details set reportSaved=reportSaved+1 where reportID=?`,
+      [reportID],
       (error, result, field) => {
         if (error) {
           return callback(error);
