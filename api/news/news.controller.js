@@ -33,6 +33,67 @@ const {
   usrFollowingDecrease,
 } = require("./news.service");
 const res = require("express/lib/response");
+const natural = require("natural");
+const tokenizer = new natural.WordTokenizer();
+
+function extractHashtags(string) {
+  const regex = /#(\w+)/g;
+  const hashtags = string.match(regex);
+  return hashtags;
+}
+
+function calculateRelevance(string, keywords) {
+  const stringWords = string.toLowerCase().split(/\s+/);
+  const matchedKeywords = keywords.filter((keyword) =>
+    stringWords.includes(keyword.toLowerCase())
+  );
+  const relevanceScore = matchedKeywords.length / keywords.length;
+  return relevanceScore;
+}
+
+function extractKeywords(string) {
+  const tokens = tokenizer.tokenize(string);
+  return tokens;
+}
+
+function calculateRelevance(string, keywords) {
+  const stringWords = string.toLowerCase().split(/\s+/);
+  const matchedKeywords = keywords.filter((keyword) =>
+    stringWords.includes(keyword.toLowerCase())
+  );
+  const relevanceScore = matchedKeywords.length / keywords.length;
+  return relevanceScore;
+}
+
+function calculateReadability(string) {
+  const words = string.split(/\s+/);
+  const sentences = string.split(/[.!?]+/);
+
+  const wordCount = words.length;
+  const sentenceCount = sentences.length - 1;
+  const syllableCount = calculateSyllableCount(words);
+
+  const averageWordsPerSentence = wordCount / sentenceCount;
+  const averageSyllablesPerWord = syllableCount / wordCount;
+
+  const readabilityScore =
+    0.39 * averageWordsPerSentence + 11.8 * averageSyllablesPerWord - 15.59;
+
+  return readabilityScore.toFixed(2);
+}
+
+function calculateSyllableCount(words) {
+  let syllableCount = 0;
+  const syllableRegex =
+    /[^aeiouy][aeiouy]+(?:[^aeiouy]$|[^aeiouy](?=[^aeiouy]))?/gi;
+
+  for (const word of words) {
+    const matches = word.match(syllableRegex);
+    syllableCount += matches ? matches.length : 0;
+  }
+
+  return syllableCount;
+}
 
 module.exports = {
   createBloc: (req, res) => {
@@ -579,6 +640,138 @@ module.exports = {
             success: true,
             message: "Unfollowed",
             followed: false,
+          });
+        });
+      });
+    });
+  },
+
+  trendingReports: (req, res) => {
+    allReportsCount((err, reportCount) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+      const totalPage = Math.ceil(+reportCount[0]?.count / req.query.limit);
+
+      if (req.query.page > totalPage) {
+        return res.json({
+          success: false,
+          message: "There are no more reports",
+        });
+      }
+      const offset = (req.query.page - 1) * req.query.limit;
+
+      allReportsList(offset, req.query.limit, (err, reportsList) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        reportsList.sort((reportA, reportB) => {
+          const wordsA = reportA.reportHeadline.split(" ").length;
+          const wordsB = reportB.reportHeadline.split(" ").length;
+          return wordsA - wordsB;
+        });
+
+        reportsList.sort((reportA, reportB) => {
+          const hashtagsA = extractHashtags(
+            reportA.reportHeadline + " " + reportA.reportDes
+          );
+          const hashtagsB = extractHashtags(
+            reportB.reportHeadline + " " + reportB.reportDes
+          );
+          return hashtagsA - hashtagsB;
+        });
+
+        reportsList.sort((reportA, reportB) => {
+          const stringA = reportA.reportHeadline + " " + reportA.reportDes;
+          const stringB = reportB.reportHeadline + " " + reportB.reportDes;
+          const keywordsA = extractKeywords(stringA);
+          const keywordsB = extractKeywords(stringB);
+          const relevanceScoreA = calculateRelevance(stringA, keywordsA);
+          const relevanceScoreB = calculateRelevance(stringB, keywordsB);
+          return relevanceScoreA - relevanceScoreB;
+        });
+
+        reportsList.sort((reportA, reportB) => {
+          const readabilityScoreScoreA = calculateReadability(
+            reportA.reportHeadline + " " + reportA.reportDes
+          );
+          const readabilityScoreScoreB = calculateReadability(
+            reportB.reportHeadline + " " + reportB.reportDes
+          );
+          return readabilityScoreScoreA - readabilityScoreScoreB;
+        });
+
+        allLikedReports(req.params.usrID, (err, likedReportsList) => {
+          if (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: "No liked reports",
+            });
+          }
+
+          if (likedReportsList.length < 1) {
+            return res.json({
+              success: true,
+              reports: reportsList,
+              totalPage: totalPage,
+            });
+          }
+
+          console.log(likedReportsList);
+
+          const likedRecordSet = new Set(
+            likedReportsList.map((record) => record.reportID)
+          );
+
+          const reportsWithLikedStatus = reportsList.map((report) => {
+            const liked = likedRecordSet.has(report.reportID);
+            return { ...report, liked: liked };
+          });
+
+          allcommentedReports(req.params.usrID, (err, commentedReportsList) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            if (commentedReportsList.length < 1) {
+              return res.json({
+                success: true,
+                reports: reportsWithLikedStatus,
+                totalPage: totalPage,
+              });
+            }
+
+            const commentedRecordSet = new Set(
+              commentedReportsList.map((record) => record.reportID)
+            );
+
+            const reportsWithCommentedStatus = reportsWithLikedStatus.map(
+              (report) => {
+                const commented = commentedRecordSet.has(report.reportID);
+                return { ...report, commented: commented };
+              }
+            );
+
+            return res.json({
+              success: true,
+              message: "Got trending reports",
+              reports: reportsWithCommentedStatus,
+              totalPage: totalPage,
+            });
           });
         });
       });

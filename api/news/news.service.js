@@ -299,8 +299,8 @@ module.exports = {
 
   allReportsList: (offset, limit, callback) => {
     pool.query(
-      `select * from report_details limit ? offset ?`,
-      [+limit, +offset],
+      `select * from report_details order by reportDate, reportTime, reportUploadTime asc limit ${+limit} offset ${+offset}`,
+      // [+limit, +offset],
       (error, results, field) => {
         if (error) {
           return callback(error);
