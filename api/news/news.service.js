@@ -504,4 +504,31 @@ module.exports = {
       }
     );
   },
+
+  particularBlocTopReport: (blocID, offset, limit, callback) => {
+    pool.query(
+      `select * from report_details where reportBlocID=? order by reportLikes, reportComments, reportSaved desc limit ${+limit} offset ${+offset}`,
+      [blocID, limit, offset],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  particularBlocReportsCount: (blocID, callback) => {
+    pool.query(
+      `select count(*) as count from report_details where reportBlocID=?`,
+      [blocID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+        return callback(null, result);
+      }
+    );
+  },
 };
