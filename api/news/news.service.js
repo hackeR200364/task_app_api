@@ -574,5 +574,29 @@ module.exports = {
     );
   },
 
-  
+  searchingTopReports: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY bd.followers DESC, rd.reportLikes DESC, rd.reportComments DESC, rd.reportSaved DESC, rd.reportUploadTime DESC limit ${+limit} offset ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  searchingTopReportsCount: (search_string, callback) => {
+    pool.query(
+      `SELECT COUNT(rd.reportID) AS reportsCount FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%'`,
+      (error, result, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };
