@@ -19,6 +19,7 @@ const {
   blocReports,
   likedReportsByUsr,
   particularBlocDetails,
+  topReportsSearch,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -94,3 +95,4 @@ newsRouter.get("/blocTopReports/:blocID/:usrID", blocTopReports);
 newsRouter.get("/blocReports/:blocID/:usrID", blocReports);
 newsRouter.get("/usrLikedReports/:likedByUsrID", likedReportsByUsr);
 newsRouter.get("/blocDetails/:blocID/:usrID", particularBlocDetails);
+newsRouter.get("/searchTopReports/:usrID", topReportsSearch);
