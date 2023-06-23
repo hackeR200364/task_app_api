@@ -29,7 +29,7 @@ module.exports = {
   create: (data, blocProfile, callback) => {
     const blocID = data.blocName + "-" + data.usrID;
     pool.query(
-      `insert into bloc_details(usrName, usrID, usrEmail, blocID, blocName, blocDes, usrPhoneNo, blocProfile, blocLat, blocLong, followers)value(?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into bloc_details(usrName, usrID, usrEmail, blocID, blocName, blocDes, usrPhoneNo, blocProfile, blocLat, blocLong, followers, reportsCount)value(?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         data.usrName,
         data.usrID,
@@ -41,6 +41,7 @@ module.exports = {
         blocProfile,
         data.blocLat,
         data.blocLong,
+        0,
         0,
       ],
       (error, results, fields) => {
@@ -124,7 +125,7 @@ module.exports = {
 
   newsCountIncrease: (uid, callback) => {
     pool.query(
-      `update users set reportCount=reportCount+1 where uid=?`,
+      `update bloc_details set reportsCount=reportsCount+1 where usrID=?`,
       [uid],
       (error, result, field) => {
         if (error) {
@@ -609,6 +610,60 @@ module.exports = {
         }
 
         return callback(null, results);
+      }
+    );
+  },
+
+  searchReporters: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT * FROM bloc_details WHERE usrName LIKE '%${search_string}%' OR usrID LIKE '%${search_string}%' OR usrEmail LIKE '%${search_string}%' OR blocID LIKE '%${search_string}%' OR blocName LIKE '%${search_string}%' OR blocDes LIKE '%${search_string}%' OR usrPhoneNo LIKE '%${search_string}%' ORDER BY followers DESC, reportsCount DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  searchReportersCount: (search_string, callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS reportersCount FROM bloc_details WHERE usrName LIKE '%${search_string}%' OR usrID LIKE '%${search_string}%' OR usrEmail LIKE '%${search_string}%' OR blocID LIKE '%${search_string}%' OR blocName LIKE '%${search_string}%' OR blocDes LIKE '%${search_string}%' OR usrPhoneNo LIKE '%${search_string}%'`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  particularUsrFollowedBloc: (fromUsrID, callback) => {
+    pool.query(
+      `select blocID from bloc_follow_record where fromUsrID=?`,
+      [fromUsrID],
+      (error, results, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  particularUsrFollowedBlocCount: (fromUsrID, callback) => {
+    pool.query(
+      `select count(*) from bloc_follow_record where fromUsrID=?`,
+      [fromUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
       }
     );
   },

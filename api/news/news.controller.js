@@ -38,6 +38,9 @@ const {
   searchingTopReports,
   searchingReportsCount,
   searchingAllReports,
+  searchReporters,
+  searchReportersCount,
+  particularUsrFollowedBloc,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -1310,6 +1313,95 @@ module.exports = {
                 }
               );
             });
+          }
+        );
+      }
+    );
+  },
+
+  reportersSearch: (req, res) => {
+    searchReportersCount(
+      req.query.q.replace(/\+/g, " "),
+      (err, reportersCount) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong ",
+          });
+        }
+
+        if (reportersCount[0].reportersCount < 1) {
+          return res.json({
+            success: false,
+            message: "No reporters found",
+          });
+        }
+
+        const totalPage = Math.ceil(
+          +reportersCount[0]?.reportersCount / req.query.limit
+        );
+
+        if (req.query.page > totalPage) {
+          return res.json({
+            success: false,
+            message: "There are no more reports",
+          });
+        }
+
+        const offset = (req.query.page - 1) * req.query.limit;
+
+        searchReporters(
+          req.query.q.replace(/\+/g, " "),
+          req.query.limit,
+          offset,
+          (err, reporters) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong ",
+              });
+            }
+
+            particularUsrFollowedBloc(
+              req.params.fromUsrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: reporters,
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                const reportersWithFollowedStatus = reporters.map(
+                  (reporter) => {
+                    const followed = followedRecordSet.has(reporter.blocID);
+                    return { ...reporter, followed: followed };
+                  }
+                );
+
+                return res.json({
+                  success: true,
+                  message: "Got trending reports",
+                  totalPage: totalPage,
+                  reports: reportersWithFollowedStatus,
+                });
+              }
+            );
           }
         );
       }

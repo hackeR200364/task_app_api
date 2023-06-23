@@ -4,7 +4,7 @@ const pool = require("../../config/database");
 module.exports = {
   create: (data, callBack) => {
     pool.query(
-      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, usrProfession, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints, verified, hasBloc, reportCount, blocName)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,false,false,0,blocName)`,
+      `insert into users(usrFirstName, usrLastName, usrPassword, uid, usrProfilePic, usrDescription, usrProfession, taskBusiness, taskCount, taskDelete, taskPending, taskPersonal, usrEmail, taskDone, usrPoints, verified, hasBloc, blocName)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,false,false,blocName)`,
       [
         data.usrFirstName,
         data.usrLastName,
