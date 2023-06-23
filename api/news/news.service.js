@@ -587,7 +587,7 @@ module.exports = {
     );
   },
 
-  searchingTopReportsCount: (search_string, callback) => {
+  searchingReportsCount: (search_string, callback) => {
     pool.query(
       `SELECT COUNT(rd.reportID) AS reportsCount FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%'`,
       (error, result, fields) => {
@@ -596,6 +596,19 @@ module.exports = {
         }
 
         return callback(null, result);
+      }
+    );
+  },
+
+  searchingAllReports: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY rd.reportUploadTime DESC limit ${+limit} offset ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
       }
     );
   },
