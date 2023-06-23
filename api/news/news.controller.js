@@ -1065,4 +1065,21 @@ module.exports = {
       }
     );
   },
+
+  particularBlocDetails: (req, res) => {
+    blocDetails(req.params.usrID, req.params.blocID, (err, details) => {
+      if (err) {
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Got the bloc dtails",
+        details: details,
+      });
+    });
+  },
 };
