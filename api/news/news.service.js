@@ -545,4 +545,32 @@ module.exports = {
       }
     );
   },
+
+  particularUsrLikedReports: (likedByUsrID, offset, limit, callback) => {
+    pool.query(
+      `SELECT rd.* FROM liked_record lr JOIN report_details rd ON lr.reportID = rd.reportID WHERE lr.likedByUsrID=? limit ${+limit} offset ${+offset}`,
+      [likedByUsrID],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  particularUsrLikedReportsCounts: (likedByUsrID, callback) => {
+    pool.query(
+      `select count(*) as count from liked_record where likedByUsrID=?`,
+      [likedByUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };

@@ -17,6 +17,7 @@ const {
   trendingReports,
   blocTopReports,
   blocReports,
+  likedReportsByUsr,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -90,3 +91,4 @@ newsRouter.post("/unfollow/:blocID/:fromUsrID", unfollowBloc);
 newsRouter.get("/trendingReports/:usrID", trendingReports);
 newsRouter.get("/blocTopReports/:blocID/:usrID", blocTopReports);
 newsRouter.get("/blocReports/:blocID/:usrID", blocReports);
+newsRouter.get("/usrLikedReports/:likedByUsrID", likedReportsByUsr);

@@ -33,6 +33,8 @@ const {
   usrFollowingDecrease,
   particularBlocReportsCount,
   particularBlocTopReports,
+  particularUsrLikedReports,
+  particularUsrLikedReportsCounts,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -1009,5 +1011,58 @@ module.exports = {
         }
       );
     });
+  },
+
+  likedReportsByUsr: (req, res) => {
+    particularUsrLikedReportsCounts(
+      req.params.likedByUsrID,
+      (err, reportCount) => {
+        if (err) {
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        if (reportCount[0].count < 1) {
+          return res.json({
+            success: false,
+            message: "No liked reports found",
+          });
+        }
+
+        const totalPage = Math.ceil(+reportCount[0]?.count / req.query.limit);
+
+        if (req.query.page > totalPage) {
+          return res.json({
+            success: false,
+            message: "There are no more reports",
+          });
+        }
+
+        const offset = (req.query.page - 1) * req.query.limit;
+
+        particularUsrLikedReports(
+          req.params.likedByUsrID,
+          offset,
+          req.query.limit,
+          (err, likedReports) => {
+            if (err) {
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            return res.json({
+              success: true,
+              message: "Got reports",
+              totalPage: totalPage,
+              reports: likedReports,
+            });
+          }
+        );
+      }
+    );
   },
 };
