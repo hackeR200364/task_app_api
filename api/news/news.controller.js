@@ -41,6 +41,8 @@ const {
   searchReporters,
   searchReportersCount,
   particularUsrFollowedBloc,
+  topReportsCount,
+  topReports,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -1317,6 +1319,149 @@ module.exports = {
         );
       }
     );
+  },
+
+  topReports: (req, res) => {
+    topReportsCount((err, reportsCount) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong ",
+        });
+      }
+
+      if (reportsCount[0].reportsCount < 1) {
+        return res.json({
+          success: false,
+          message: "No liked reports found",
+        });
+      }
+
+      const totalPage = Math.ceil(
+        +reportsCount[0]?.reportCount / req.query.limit
+      );
+
+      if (req.query.page > totalPage) {
+        return res.json({
+          success: false,
+          message: "There are no more reports",
+        });
+      }
+
+      const offset = (req.query.page - 1) * req.query.limit;
+
+      topReports(req.query.limit, offset, (err, reports) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        allLikedReports(req.params.usrID, (err, likedReportsList) => {
+          if (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: "No liked reports",
+            });
+          }
+
+          if (likedReportsList.length < 1) {
+            return res.json({
+              success: true,
+              totalPage: totalPage,
+              reports: reports,
+            });
+          }
+
+          const likedRecordSet = new Set(
+            likedReportsList.map((record) => record.reportID)
+          );
+
+          const reportsWithLikedStatus = reports.map((report) => {
+            const liked = likedRecordSet.has(report.reportID);
+            return { ...report, liked: liked };
+          });
+
+          allcommentedReports(req.params.usrID, (err, commentedReportsList) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            if (commentedReportsList.length < 1) {
+              return res.json({
+                success: true,
+                totalPage: totalPage,
+                reports: reportsWithLikedStatus,
+              });
+            }
+
+            const commentedRecordSet = new Set(
+              commentedReportsList.map((record) => record.reportID)
+            );
+
+            const reportsWithCommentedStatus = reportsWithLikedStatus.map(
+              (report) => {
+                const commented = commentedRecordSet.has(report.reportID);
+                return { ...report, commented: commented };
+              }
+            );
+
+            particularUsrFollowedBloc(
+              req.params.fromUsrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: reportsWithCommentedStatus,
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                const reportersWithFollowedStatus =
+                  reportsWithCommentedStatus.map((report) => {
+                    const followed = followedRecordSet.has(report.blocID);
+                    return { ...report, followed: followed };
+                  });
+
+                return res.json({
+                  success: true,
+                  message: "Got trending reports",
+                  totalPage: totalPage,
+                  reports: reportersWithFollowedStatus,
+                });
+              }
+            );
+
+            // return res.json({
+            //   success: true,
+            //   message: "Got trending reports",
+            //   totalPage: totalPage,
+            //   reports: reportsWithCommentedStatus,
+            // });
+          });
+        });
+      });
+    });
   },
 
   reportersSearch: (req, res) => {

@@ -217,7 +217,7 @@ module.exports = {
 
   reportCommentRecordList: (offset, limit, reportID, callback) => {
     pool.query(
-      `select * from comments_record where reportID=? limit ? offset ?`,
+      `SELECT cr.*, u.* FROM comments_record cr JOIN users u ON cr.fromUsrID = u.uid WHERE cr.reportID = ? LIMIT ? OFFSET ?`,
       [reportID, +limit, +offset],
       (error, results, field) => {
         if (error) {
@@ -300,7 +300,7 @@ module.exports = {
 
   allReportsList: (offset, limit, callback) => {
     pool.query(
-      `select * from report_details order by reportDate, reportTime, reportUploadTime asc limit ${+limit} offset ${+offset}`,
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID ORDER BY rd.reportDate, rd.reportTime, rd.reportUploadTime ASC LIMIT ${+limit} OFFSET ${+offset}; `,
       // [+limit, +offset],
       (error, results, field) => {
         if (error) {
@@ -313,7 +313,7 @@ module.exports = {
 
   allLikedReports: (likedByUsrID, callback) => {
     pool.query(
-      `select reportID from liked_record where likedByUsrID=?`,
+      `SELECT lr.reportID, bd.* FROM liked_record lr JOIN report_details rd ON lr.reportID = rd.reportID JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE lr.likedByUsrID = ?`,
       [likedByUsrID],
       (error, results, field) => {
         if (error) {
@@ -549,7 +549,7 @@ module.exports = {
 
   particularUsrLikedReports: (likedByUsrID, offset, limit, callback) => {
     pool.query(
-      `SELECT rd.* FROM liked_record lr JOIN report_details rd ON lr.reportID = rd.reportID WHERE lr.likedByUsrID=? limit ${+limit} offset ${+offset}`,
+      `SELECT rd.*, bd.* FROM liked_record lr JOIN report_details rd ON lr.reportID = rd.reportID JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE lr.likedByUsrID = ? LIMIT ${+limit} OFFSET ${+offset}`,
       [likedByUsrID],
       (error, results, fields) => {
         if (error) {
@@ -577,7 +577,7 @@ module.exports = {
 
   searchingTopReports: (search_string, limit, offset, callback) => {
     pool.query(
-      `SELECT rd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY bd.followers DESC, rd.reportLikes DESC, rd.reportComments DESC, rd.reportSaved DESC, rd.reportUploadTime DESC limit ${+limit} offset ${+offset}`,
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY bd.followers DESC, rd.reportLikes DESC, rd.reportComments DESC, rd.reportSaved DESC, rd.reportUploadTime DESC limit ${+limit} offset ${+offset}`,
       (error, results, fields) => {
         if (error) {
           return callback(error);
@@ -603,7 +603,7 @@ module.exports = {
 
   searchingAllReports: (search_string, limit, offset, callback) => {
     pool.query(
-      `SELECT rd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY rd.reportUploadTime DESC limit ${+limit} offset ${+offset}`,
+      `SELECT rd.* , bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportHeadline LIKE '%${search_string}%' OR rd.reportDes LIKE '%${search_string}%' ORDER BY rd.reportUploadTime DESC LIMIT ${+limit} OFFSET ${+offset}`,
       (error, results, fields) => {
         if (error) {
           return callback(error);
@@ -658,6 +658,32 @@ module.exports = {
     pool.query(
       `select count(*) from bloc_follow_record where fromUsrID=?`,
       [fromUsrID],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  topReports: (limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE bd.followers = (SELECT MAX(followers) FROM bloc_details) ORDER BY rd.reportUploadTime DESC, rd.reportTime DESC, rd.reportDate DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  topReportsCount: (callback) => {
+    pool.query(
+      `SELECT COUNT(rd.reportID) AS reportCount FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE bd.followers = (SELECT MAX(followers) FROM bloc_details)`,
       (error, result, field) => {
         if (error) {
           return callback(error);
