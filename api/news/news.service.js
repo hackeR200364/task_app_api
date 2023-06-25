@@ -25,6 +25,19 @@ function generateCommentId() {
   return contentId + timestamp;
 }
 
+function generateNotificationId() {
+  const timestamp = Date.now().toString(36);
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let contentId = "";
+  for (let i = 0; i < 10; i++) {
+    contentId += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return contentId + timestamp;
+}
+
 module.exports = {
   create: (data, blocProfile, callback) => {
     const blocID = data.blocName + "-" + data.usrID;
@@ -93,8 +106,8 @@ module.exports = {
   },
 
   newsPost: (data, images, thumbImage, callback) => {
-    const timestamp = Math.floor(Date.now() / 1000);
-    console.log(timestamp);
+    // const timestamp = Math.floor(Date.now() / 1000);
+    // console.log(timestamp);
     const reportID = generateContentId();
     pool.query(
       `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -710,6 +723,49 @@ module.exports = {
   recentReportCount: (callback) => {
     pool.query(
       `SELECT COUNT(*) AS reportCount FROM report_details WHERE TIMESTAMPDIFF(MINUTE, reportUploadTime, NOW()) >= 15`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  addNotifications: (reportID, blocID, blocUsrID, title, callback) => {
+    let notificationID = generateContentId();
+    pool.query(
+      `INSERT INTO notification_record (reportID, notificationID, blocID, blocUsrID, title) VALUES (?, ?, ?, ?, ?)`,
+      [reportID, notificationID, blocID, blocUsrID, title],
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, notificationID);
+      }
+    );
+  },
+
+  notifications: (usrID, limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.*, bd.*, nr.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID JOIN notification_record nr ON rd.reportID = nr.reportID JOIN bloc_follow_record bfr ON bd.blocID = bfr.blocID WHERE bfr.fromUsrID=? ORDER BY nr.notificationTime DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      [usrID],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  notificationsCount: (usrID, callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS notificationCount FROM notification_record nr JOIN bloc_follow_record bfr ON nr.blocID = bfr.blocID WHERE bfr.fromUsrID = ?`,
+      [usrID],
       (error, result, field) => {
         if (error) {
           return callback(error);
