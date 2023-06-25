@@ -624,7 +624,7 @@ module.exports = {
 
                 return res.json({
                   success: true,
-                  message: "Got trending reports",
+                  message: "Got all reports",
                   totalPage: totalPage,
                   reports: reportersWithFollowedStatus,
                 });
@@ -768,7 +768,7 @@ module.exports = {
 
             return res.json({
               success: true,
-              message: "Followed",
+              message: `You Are Now Following ${req.body.blocID}`,
               followed: true,
             });
           });
