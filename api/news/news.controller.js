@@ -43,6 +43,8 @@ const {
   particularUsrFollowedBloc,
   topReportsCount,
   topReports,
+  recentReportCount,
+  recentReports,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -1102,7 +1104,9 @@ module.exports = {
 
                     // console.log(reportsList[0].reportBlocID);
 
-                    const followed = followedRecordSet.has(reportsList[0].reportBlocID);
+                    const followed = followedRecordSet.has(
+                      reportsList[0].reportBlocID
+                    );
 
                     // const reportersWithFollowedStatus =
                     //   reportsWithCommentedStatus.map((report) => {
@@ -1380,7 +1384,9 @@ module.exports = {
 
                     const reportersWithFollowedStatus =
                       reportsWithCommentedStatus.map((report) => {
-                        const followed = followedRecordSet.has(report.reportBlocID);
+                        const followed = followedRecordSet.has(
+                          report.reportBlocID
+                        );
                         return { ...report, followed: followed };
                       });
 
@@ -1725,7 +1731,9 @@ module.exports = {
 
                       const reportersWithFollowedStatus =
                         reportsWithCommentedStatus.map((report) => {
-                          const followed = followedRecordSet.has(report.reportBlocID);
+                          const followed = followedRecordSet.has(
+                            report.reportBlocID
+                          );
                           return { ...report, followed: followed };
                         });
 
@@ -1976,5 +1984,54 @@ module.exports = {
         );
       }
     );
+  },
+
+  recentReports: (req, res) => {
+    recentReportCount((err, reportCount) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      if (reportCount[0].reportCount < 1) {
+        return res.json({
+          success: false,
+          message: "No reports found",
+        });
+      }
+
+      const totalPage = Math.ceil(
+        +reportCount[0]?.reportCount / req.query.limit
+      );
+
+      if (req.query.page > totalPage) {
+        return res.json({
+          success: false,
+          message: "There are no more reports",
+        });
+      }
+
+      const offset = (req.query.page - 1) * req.query.limit;
+
+      recentReports(req.query.limit, offset, (err, reports) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: "Got recent reports",
+          totalPage: totalPage,
+          reports: reports,
+        });
+      });
+    });
   },
 };
