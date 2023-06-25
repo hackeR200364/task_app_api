@@ -210,29 +210,152 @@ module.exports = {
   },
 
   reportAllDetails: (req, res) => {
-    newsDetails(req.params.usrID, req.params.reportUsrID, (err, reportRes) => {
-      if (err) {
-        console.error(err);
-        return res.json({
-          success: false,
-          message: "Something went wrong",
-        });
-      }
+    newsDetails(
+      req.params.reportUsrID,
+      req.params.reportID,
+      (err, reportRes) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
 
-      if (!reportRes) {
-        return res.status(404).json({
-          success: false,
-          message: "Not found any report",
+        if (!reportRes) {
+          return res.status(404).json({
+            success: false,
+            message: "Not found any report",
+          });
+        }
+
+        allLikedReports(req.params.usrID, (err, likedReportsList) => {
+          if (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: "No liked reports",
+            });
+          }
+
+          if (likedReportsList.length < 1) {
+            return res.json({
+              success: true,
+              detaiils: reportRes[0],
+            });
+          }
+
+          console.log(likedReportsList);
+
+          // const likedRecordSet = new Set(
+          //   likedReportsList.map((record) => record.reportID)
+          // );
+
+          const likedRecordSet = new Set(
+            likedReportsList
+              .map((record) => record.reportID)
+              .filter(
+                (reportID, index, self) => self.indexOf(reportID) === index
+              )
+          );
+
+          console.error(likedRecordSet);
+
+          const liked = likedRecordSet.has(req.params.reportID);
+
+          // const reportsWithLikedStatus = reportsList.map((report) => {
+          //   const liked = likedRecordSet.has(report.reportID);
+          //   return { ...report, liked: liked };
+          // });
+
+          allcommentedReports(req.params.usrID, (err, commentedReportsList) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            if (commentedReportsList.length < 1) {
+              return res.json({
+                success: true,
+                liked: liked,
+                detaiils: reportRes[0],
+              });
+            }
+
+            const commentedRecordSet = new Set(
+              commentedReportsList.map((record) => record.reportID)
+            );
+
+            const commented = commentedRecordSet.has(req.params.reportID);
+
+            // const reportsWithCommentedStatus = reportsWithLikedStatus.map(
+            //   (report) => {
+            //     const commented = commentedRecordSet.has(report.reportID);
+            //     return { ...report, commented: commented };
+            //   }
+            // );
+
+            particularUsrFollowedBloc(
+              req.params.usrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    liked: liked,
+                    commented: commented,
+                    detaiils: reportRes[0],
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                // console.error(reportRes);
+
+                const followed = followedRecordSet.has(reportRes[0].blocID);
+
+                // const reportersWithFollowedStatus =
+                //   reportsWithCommentedStatus.map((report) => {
+                //     const followed = followedRecordSet.has(report.blocID);
+                //     return { ...report, followed: followed };
+                //   });
+
+                reportRes[0].reportImages =
+                  reportRes[0].reportImages.split(",");
+                return res.json({
+                  success: true,
+                  message: "Got the report",
+                  liked: liked,
+                  commented: commented,
+                  followed: followed,
+                  detaiils: reportRes[0],
+                });
+              }
+            );
+          });
         });
+
+        // reportRes[0].reportImages = reportRes[0].reportImages.split(",");
+        // console.log(reportRes[0].reportImages);
+        // return res.json({
+        //   success: true,
+        //   message: "Got the report",
+        //   data: reportRes[0],
+        // });
       }
-      reportRes[0].reportImages = reportRes[0].reportImages.split(",");
-      console.log(reportRes[0].reportImages);
-      return res.json({
-        success: true,
-        message: "Got the report",
-        data: reportRes[0],
-      });
-    });
+    );
   },
 
   particularReportLike: (req, res) => {
@@ -428,7 +551,7 @@ module.exports = {
             });
           }
 
-          console.log(likedReportsList);
+          // console.log(likedReportsList);
 
           const likedRecordSet = new Set(
             likedReportsList.map((record) => record.reportID)
@@ -467,12 +590,44 @@ module.exports = {
               }
             );
 
-            return res.json({
-              success: true,
-              message: "Got all reports",
-              reports: reportsWithCommentedStatus,
-              totalPage: totalPage,
-            });
+            particularUsrFollowedBloc(
+              req.params.usrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: reportsWithCommentedStatus,
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                const reportersWithFollowedStatus =
+                  reportsWithCommentedStatus.map((report) => {
+                    // console.log(report.reportBlocID);
+                    const followed = followedRecordSet.has(report.reportBlocID);
+                    return { ...report, followed: followed };
+                  });
+
+                return res.json({
+                  success: true,
+                  message: "Got trending reports",
+                  totalPage: totalPage,
+                  reports: reportersWithFollowedStatus,
+                });
+              }
+            );
           });
         });
       });
@@ -778,12 +933,43 @@ module.exports = {
               }
             );
 
-            return res.json({
-              success: true,
-              message: "Got trending reports",
-              reports: reportsWithCommentedStatus,
-              totalPage: totalPage,
-            });
+            particularUsrFollowedBloc(
+              req.params.usrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: reportsWithCommentedStatus,
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                const reportersWithFollowedStatus =
+                  reportsWithCommentedStatus.map((report) => {
+                    const followed = followedRecordSet.has(report.reportBlocID);
+                    return { ...report, followed: followed };
+                  });
+
+                return res.json({
+                  success: true,
+                  message: "Got trending reports",
+                  totalPage: totalPage,
+                  reports: reportersWithFollowedStatus,
+                });
+              }
+            );
           });
         });
       });
@@ -817,7 +1003,7 @@ module.exports = {
 
       const offset = (req.query.page - 1) * req.query.limit;
 
-      particularBlocTopReport(
+      particularBlocTopReports(
         req.params.blocID,
         offset,
         req.query.limit,
@@ -842,6 +1028,7 @@ module.exports = {
             if (likedReportsList.length < 1) {
               return res.json({
                 success: true,
+                followed: followed,
                 reports: reportsList,
                 totalPage: totalPage,
               });
@@ -872,6 +1059,7 @@ module.exports = {
                 if (commentedReportsList.length < 1) {
                   return res.json({
                     success: true,
+                    followed: followed,
                     reports: reportsWithLikedStatus,
                     totalPage: totalPage,
                   });
@@ -888,12 +1076,49 @@ module.exports = {
                   }
                 );
 
-                return res.json({
-                  success: true,
-                  message: "Got all reports",
-                  reports: reportsWithCommentedStatus,
-                  totalPage: totalPage,
-                });
+                particularUsrFollowedBloc(
+                  req.params.usrID,
+                  (err, followedBlocs) => {
+                    if (err) {
+                      console.error(err);
+                      return res.json({
+                        success: false,
+                        message: "Something went wrong ",
+                      });
+                    }
+
+                    if (followedBlocs.length < 1) {
+                      return res.json({
+                        success: true,
+                        followed: false,
+                        totalPage: totalPage,
+                        reports: reportsWithCommentedStatus,
+                      });
+                    }
+
+                    const followedRecordSet = new Set(
+                      followedBlocs.map((record) => record.blocID)
+                    );
+
+                    // console.log(reportsList[0].reportBlocID);
+
+                    const followed = followedRecordSet.has(reportsList[0].reportBlocID);
+
+                    // const reportersWithFollowedStatus =
+                    //   reportsWithCommentedStatus.map((report) => {
+                    //     const followed = followedRecordSet.has(report.blocID);
+                    //     return { ...report, followed: followed };
+                    //   });
+
+                    return res.json({
+                      success: true,
+                      followed: followed,
+                      message: "Got trending reports",
+                      totalPage: totalPage,
+                      reports: reportsWithCommentedStatus,
+                    });
+                  }
+                );
               }
             );
           });
@@ -961,6 +1186,7 @@ module.exports = {
             if (likedReportsList.length < 1) {
               return res.json({
                 success: true,
+                followed: false,
                 reports: reportsList,
                 totalPage: totalPage,
               });
@@ -991,6 +1217,7 @@ module.exports = {
                 if (commentedReportsList.length < 1) {
                   return res.json({
                     success: true,
+                    followed: false,
                     reports: reportsWithLikedStatus,
                     totalPage: totalPage,
                   });
@@ -1007,12 +1234,47 @@ module.exports = {
                   }
                 );
 
-                return res.json({
-                  success: true,
-                  message: "Got all reports",
-                  reports: reportsWithCommentedStatus,
-                  totalPage: totalPage,
-                });
+                particularUsrFollowedBloc(
+                  req.params.usrID,
+                  (err, followedBlocs) => {
+                    if (err) {
+                      console.error(err);
+                      return res.json({
+                        success: false,
+                        message: "Something went wrong ",
+                      });
+                    }
+
+                    if (followedBlocs.length < 1) {
+                      return res.json({
+                        success: true,
+                        followed: false,
+                        totalPage: totalPage,
+                        reports: reportsWithCommentedStatus,
+                      });
+                    }
+
+                    const followedRecordSet = new Set(
+                      followedBlocs.map((record) => record.fromUsrID)
+                    );
+
+                    const followed = followedRecordSet.has(reportsList.blocID);
+
+                    // const reportersWithFollowedStatus =
+                    //   reportsWithCommentedStatus.map((report) => {
+                    //     const followed = followedRecordSet.has(report.blocID);
+                    //     return { ...report, followed: followed };
+                    //   });
+
+                    return res.json({
+                      success: true,
+                      followed: followed,
+                      message: "Got trending reports",
+                      totalPage: totalPage,
+                      reports: reportsWithCommentedStatus,
+                    });
+                  }
+                );
               }
             );
           });
@@ -1062,12 +1324,76 @@ module.exports = {
               });
             }
 
-            return res.json({
-              success: true,
-              message: "Got reports",
-              totalPage: totalPage,
-              reports: likedReports,
-            });
+            allcommentedReports(
+              req.params.likedByUsrID,
+              (err, commentedReportsList) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong",
+                  });
+                }
+
+                if (commentedReportsList.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: likedReports,
+                  });
+                }
+
+                const commentedRecordSet = new Set(
+                  commentedReportsList.map((record) => record.reportID)
+                );
+
+                const reportsWithCommentedStatus = likedReports.map(
+                  (report) => {
+                    const commented = commentedRecordSet.has(report.reportID);
+                    return { ...report, commented: commented };
+                  }
+                );
+
+                particularUsrFollowedBloc(
+                  req.params.likedByUsrID,
+                  (err, followedBlocs) => {
+                    if (err) {
+                      console.error(err);
+                      return res.json({
+                        success: false,
+                        message: "Something went wrong ",
+                      });
+                    }
+
+                    console.error(followedBlocs.length);
+                    if (followedBlocs.length < 1) {
+                      return res.json({
+                        success: true,
+                        totalPage: totalPage,
+                        reports: reportsWithCommentedStatus,
+                      });
+                    }
+
+                    const followedRecordSet = new Set(
+                      followedBlocs.map((record) => record.blocID)
+                    );
+
+                    const reportersWithFollowedStatus =
+                      reportsWithCommentedStatus.map((report) => {
+                        const followed = followedRecordSet.has(report.reportBlocID);
+                        return { ...report, followed: followed };
+                      });
+
+                    return res.json({
+                      success: true,
+                      message: "Got trending reports",
+                      totalPage: totalPage,
+                      reports: reportersWithFollowedStatus,
+                    });
+                  }
+                );
+              }
+            );
           }
         );
       }
@@ -1083,10 +1409,43 @@ module.exports = {
         });
       }
 
-      return res.json({
-        success: true,
-        message: "Got the bloc dtails",
-        details: details,
+      particularUsrFollowedBloc(req.params.fromUsrID, (err, followedBlocs) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong ",
+          });
+        }
+
+        if (followedBlocs.length < 1) {
+          return res.json({
+            success: true,
+            followed: false,
+            details: details,
+          });
+        }
+
+        const followedRecordSet = new Set(
+          followedBlocs.map((record) => record.blocID)
+        );
+
+        // console.error(followedRecordSet.length);
+
+        const followed = followedRecordSet.has(req.params.blocID);
+
+        // const reportersWithFollowedStatus =
+        //   reportsWithCommentedStatus.map((report) => {
+        //     const followed = followedRecordSet.has(report.blocID);
+        //     return { ...report, followed: followed };
+        //   });
+
+        return res.json({
+          success: true,
+          followed: followed,
+          message: "Got trending reports",
+          details: details,
+        });
       });
     });
   },
@@ -1191,12 +1550,46 @@ module.exports = {
                     }
                   );
 
-                  return res.json({
-                    success: true,
-                    message: "Got trending reports",
-                    totalPage: totalPage,
-                    reports: reportsWithCommentedStatus,
-                  });
+                  particularUsrFollowedBloc(
+                    req.params.usrID,
+                    (err, followedBlocs) => {
+                      if (err) {
+                        console.error(err);
+                        return res.json({
+                          success: false,
+                          message: "Something went wrong ",
+                        });
+                      }
+
+                      console.error(followedBlocs.length);
+                      if (followedBlocs.length < 1) {
+                        return res.json({
+                          success: true,
+                          totalPage: totalPage,
+                          reports: reportsWithCommentedStatus,
+                        });
+                      }
+
+                      const followedRecordSet = new Set(
+                        followedBlocs.map((record) => record.blocID)
+                      );
+
+                      const reportersWithFollowedStatus =
+                        reportsWithCommentedStatus.map((report) => {
+                          const followed = followedRecordSet.has(
+                            report.reportBlocID
+                          );
+                          return { ...report, followed: followed };
+                        });
+
+                      return res.json({
+                        success: true,
+                        message: "Got trending reports",
+                        totalPage: totalPage,
+                        reports: reportersWithFollowedStatus,
+                      });
+                    }
+                  );
                 }
               );
             });
@@ -1306,12 +1699,44 @@ module.exports = {
                     }
                   );
 
-                  return res.json({
-                    success: true,
-                    message: "Got trending reports",
-                    totalPage: totalPage,
-                    reports: reportsWithCommentedStatus,
-                  });
+                  particularUsrFollowedBloc(
+                    req.params.usrID,
+                    (err, followedBlocs) => {
+                      if (err) {
+                        console.error(err);
+                        return res.json({
+                          success: false,
+                          message: "Something went wrong ",
+                        });
+                      }
+
+                      console.error(followedBlocs.length);
+                      if (followedBlocs.length < 1) {
+                        return res.json({
+                          success: true,
+                          totalPage: totalPage,
+                          reports: reportsWithCommentedStatus,
+                        });
+                      }
+
+                      const followedRecordSet = new Set(
+                        followedBlocs.map((record) => record.blocID)
+                      );
+
+                      const reportersWithFollowedStatus =
+                        reportsWithCommentedStatus.map((report) => {
+                          const followed = followedRecordSet.has(report.reportBlocID);
+                          return { ...report, followed: followed };
+                        });
+
+                      return res.json({
+                        success: true,
+                        message: "Got trending reports",
+                        totalPage: totalPage,
+                        reports: reportersWithFollowedStatus,
+                      });
+                    }
+                  );
                 }
               );
             });
@@ -1415,7 +1840,7 @@ module.exports = {
             );
 
             particularUsrFollowedBloc(
-              req.params.fromUsrID,
+              req.params.usrID,
               (err, followedBlocs) => {
                 if (err) {
                   console.error(err);
@@ -1439,7 +1864,7 @@ module.exports = {
 
                 const reportersWithFollowedStatus =
                   reportsWithCommentedStatus.map((report) => {
-                    const followed = followedRecordSet.has(report.blocID);
+                    const followed = followedRecordSet.has(report.reportBlocID);
                     return { ...report, followed: followed };
                   });
 

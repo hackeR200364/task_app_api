@@ -137,10 +137,10 @@ module.exports = {
     );
   },
 
-  newsDetails: (uid, reportUsrID, callback) => {
+  newsDetails: (reportUsrID, reportID, callback) => {
     pool.query(
-      `select * from report_details where reportID=? and reportUsrID=?`,
-      [reportUsrID, uid],
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportID = ? AND rd.reportUsrID = ?`,
+      [reportID, reportUsrID],
       (error, result, field) => {
         if (error) {
           console.error(error);
