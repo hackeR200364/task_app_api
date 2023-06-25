@@ -693,4 +693,30 @@ module.exports = {
       }
     );
   },
+
+  recentReports: (limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE TIMESTAMPDIFF(MINUTE, rd.reportUploadTime, NOW()) >= 15 ORDER BY rd.reportUploadTime DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  recentReportCount: (callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS reportCount FROM report_details WHERE TIMESTAMPDIFF(MINUTE, reportUploadTime, NOW()) >= 15`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };
