@@ -76,7 +76,7 @@ module.exports = newsRouter;
 
 newsRouter.post("/createBloc", upload.single("blocProfile"), createBloc);
 newsRouter.post("/postNews", newsUpload, postReport);
-newsRouter.get("/getReportDetails/:usrID/:reportUsrID", reportAllDetails);
+newsRouter.get("/getReportDetails/:reportUsrID/:reportID/:usrID", reportAllDetails);
 newsRouter.post("/likeReport/:usrID/:reportID/:blocID", particularReportLike);
 newsRouter.post("/reportCommentPost", particularReportCommentPost);
 newsRouter.post(
@@ -98,7 +98,7 @@ newsRouter.get("/topReports/:usrID", topReports);
 newsRouter.get("/blocTopReports/:blocID/:usrID", blocTopReports);
 newsRouter.get("/blocReports/:blocID/:usrID", blocReports);
 newsRouter.get("/usrLikedReports/:likedByUsrID", likedReportsByUsr);
-newsRouter.get("/blocDetails/:blocID/:usrID", particularBlocDetails);
+newsRouter.get("/blocDetails/:blocID/:usrID/:fromUsrID", particularBlocDetails);
 newsRouter.get("/searchTopReports/:usrID", topReportsSearch);
 newsRouter.get("/searchAllReports/:usrID", allReportsSearch);
 newsRouter.get("/reporters/:fromUsrID", reportersSearch);
