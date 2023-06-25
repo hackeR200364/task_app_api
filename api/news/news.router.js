@@ -24,6 +24,8 @@ const {
   reportersSearch,
   topReports,
   recentReports,
+  addNotifications,
+  notifications,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -77,7 +79,10 @@ module.exports = newsRouter;
 
 newsRouter.post("/createBloc", upload.single("blocProfile"), createBloc);
 newsRouter.post("/postNews", newsUpload, postReport);
-newsRouter.get("/getReportDetails/:reportUsrID/:reportID/:usrID", reportAllDetails);
+newsRouter.get(
+  "/getReportDetails/:reportUsrID/:reportID/:usrID",
+  reportAllDetails
+);
 newsRouter.post("/likeReport/:usrID/:reportID/:blocID", particularReportLike);
 newsRouter.post("/reportCommentPost", particularReportCommentPost);
 newsRouter.post(
@@ -104,5 +109,6 @@ newsRouter.get("/searchTopReports/:usrID", topReportsSearch);
 newsRouter.get("/searchAllReports/:usrID", allReportsSearch);
 newsRouter.get("/reporters/:fromUsrID", reportersSearch);
 newsRouter.get("/reporters/:fromUsrID", reportersSearch);
-newsRouter.get("/recentReports", recentReports );
-
+newsRouter.get("/recentReports", recentReports);
+newsRouter.post("/addNotification", addNotifications);
+newsRouter.get("/notifications/:usrID", notifications);

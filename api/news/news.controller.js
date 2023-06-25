@@ -45,6 +45,9 @@ const {
   topReports,
   recentReportCount,
   recentReports,
+  addNotifications,
+  notifications,
+  notificationsCount,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -2032,6 +2035,84 @@ module.exports = {
           reports: reports,
         });
       });
+    });
+  },
+
+  addNotifications: (req, res) => {
+    addNotifications(
+      req.body.reportID,
+      req.body.blocID,
+      req.body.blocUsrID,
+      req.body.title,
+      (err, notificationID) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong ",
+          });
+        }
+
+        return res.json({
+          success: true,
+          message: "The notifications all are added",
+          notificationID: notificationID,
+        });
+      }
+    );
+  },
+
+  notifications: (req, res) => {
+    notificationsCount(req.params.usrID, (err, notificationCount) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong ",
+        });
+      }
+
+      if (notificationCount[0].notificationCount < 1) {
+        return res.json({
+          success: false,
+          message: "No notifications found",
+        });
+      }
+
+      const totalPage = Math.ceil(
+        +notificationCount[0]?.notificationCount / req.query.limit
+      );
+
+      if (req.query.page > totalPage) {
+        return res.json({
+          success: false,
+          message: "There are no more notifications",
+        });
+      }
+
+      const offset = (req.query.page - 1) * req.query.limit;
+
+      notifications(
+        req.params.usrID,
+        req.query.limit,
+        offset,
+        (err, notifications) => {
+          if (err) {
+            console.error(err);
+            return res.json({
+              success: false,
+              message: "Something went wrong ",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: "Got all notifications",
+            totalPage: totalPage,
+            notifications: notifications,
+          });
+        }
+      );
     });
   },
 };
