@@ -51,6 +51,8 @@ const {
   searchReportByCategoryCount,
   searchReportByCategory,
   allCategories,
+  reportSearchAutoComplete,
+  reportSearchAutoCompleteCount,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -1753,6 +1755,61 @@ module.exports = {
                   );
                 }
               );
+            });
+          }
+        );
+      }
+    );
+  },
+
+  reportSearchAutocomplete: (req, res) => {
+    reportSearchAutoCompleteCount(
+      req.query.q.replace(/\+/g, " "),
+      (err, reportsCount) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong ",
+          });
+        }
+
+        if (reportsCount[0].reportsCount < 1) {
+          return res.json({
+            success: false,
+            message: "No reports found",
+          });
+        }
+
+        const totalPage = Math.ceil(
+          +reportsCount[0]?.reportsCount / req.query.limit
+        );
+
+        if (req.query.page > totalPage) {
+          return res.json({
+            success: false,
+            message: "There are no more reports",
+          });
+        }
+
+        const offset = (req.query.page - 1) * req.query.limit;
+
+        reportSearchAutoComplete(
+          req.query.q.replace(/\+/g, " "),
+          req.query.limit,
+          offset,
+          (err, reports) => {
+            if (err) {
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            return res.json({
+              success: true,
+              message: "Got all the auto complete reports",
+              reports: reports,
             });
           }
         );

@@ -28,6 +28,7 @@ const {
   notifications,
   searchReportByCat,
   reportCategories,
+  reportSearchAutocomplete,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -171,3 +172,6 @@ newsRouter.get("/notifications/:usrID", notifications);
 
 //get all report categories
 newsRouter.get("/categories", reportCategories);
+
+//report searching autocomplete
+newsRouter.get("/reports/search/autocomplete", reportSearchAutocomplete);
