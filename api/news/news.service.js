@@ -680,6 +680,32 @@ module.exports = {
     );
   },
 
+  reportersSearchAutoComplete: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT blocID, blocName, followers, blocProfile FROM bloc_details WHERE usrName LIKE '%${search_string}%' OR usrID LIKE '%${search_string}%' OR usrEmail LIKE '%${search_string}%' OR blocID LIKE '%${search_string}%' OR blocName LIKE '%${search_string}%' OR blocDes LIKE '%${search_string}%' OR usrPhoneNo LIKE '%${search_string}%' ORDER BY followers DESC, reportsCount DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  reportersSearchAutoCompleteCount: (search_string, callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS reportersCount FROM bloc_details WHERE usrName LIKE '%${search_string}%' OR usrID LIKE '%${search_string}%' OR usrEmail LIKE '%${search_string}%' OR blocID LIKE '%${search_string}%' OR blocName LIKE '%${search_string}%' OR blocDes LIKE '%${search_string}%' OR usrPhoneNo LIKE '%${search_string}%'`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
   particularUsrFollowedBloc: (fromUsrID, callback) => {
     pool.query(
       `select blocID from bloc_follow_record where fromUsrID=?`,
