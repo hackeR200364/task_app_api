@@ -30,6 +30,7 @@ const {
   reportCategories,
   reportSearchAutocomplete,
   reporterSearchAutocomplete,
+  hashtagsAutocomplete,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -179,3 +180,6 @@ newsRouter.get("/reports/search/autocomplete", reportSearchAutocomplete);
 
 //reporters searching autocomplete
 newsRouter.get("/reporters/autocomplete", reporterSearchAutocomplete);
+
+//hashtags autocomplete
+newsRouter.get("/hashtags/autocomplete", hashtagsAutocomplete);
