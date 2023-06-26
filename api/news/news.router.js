@@ -76,7 +76,7 @@ const newsPicsStorage = multer.diskStorage({
 const newsPicsUpload = multer({ storage: newsPicsStorage });
 const newsUpload = newsPicsUpload.fields([
   { name: "reportTumbImage" },
-  { name: "reportImages", maxCount: 10 },
+  { name: "reportImages", maxCount: 5 },
 ]);
 
 module.exports = newsRouter;
