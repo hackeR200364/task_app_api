@@ -870,4 +870,30 @@ module.exports = {
       }
     );
   },
+
+  hashtagsAutoComplete: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT DISTINCT reportHashtags, COUNT(*) AS hashtagCount FROM report_details WHERE reportHashtags LIKE '%${search_string}%' GROUP BY reportHashtags ORDER BY hashtagCount DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  hashtagsAutoCompleteCount: (search_string, callback) => {
+    pool.query(
+      `SELECT COUNT(DISTINCT reportHashtags) AS hashtagCount FROM report_details WHERE reportHashtags LIKE '%${search_string}%'`,
+      (error, result, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };

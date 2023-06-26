@@ -55,6 +55,8 @@ const {
   reportSearchAutoCompleteCount,
   reportersSearchAutoComplete,
   reportersSearchAutoCompleteCount,
+  hashtagsAutoCompleteCount,
+  hashtagsAutoComplete,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -196,7 +198,9 @@ module.exports = {
       req.body,
       downloadLinks.join(","),
       `${baseURL}/${req.files.reportTumbImage[0].filename}`,
-      extractHashtags(req.body.reportHeadline + " " + req.body.reportDes).join(","),
+      extractHashtags(req.body.reportHeadline + " " + req.body.reportDes).join(
+        ","
+      ),
       (err, result) => {
         if (err) {
           console.error(err);
@@ -2401,5 +2405,82 @@ module.exports = {
         categories: categories,
       });
     });
+  },
+
+  hashtagsAutocomplete: (req, res) => {
+    hashtagsAutoCompleteCount(
+      req.query.q.replace(/\+/g, " "),
+      (err, hashtagCount) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong ",
+          });
+        }
+
+        if (hashtagCount[0].hashtagCount < 1) {
+          return res.json({
+            success: false,
+            message: "No hashtags found",
+          });
+        }
+
+        const totalPage = Math.ceil(
+          +hashtagCount[0]?.hashtagCount / req.query.limit
+        );
+
+        if (req.query.page > totalPage) {
+          return res.json({
+            success: false,
+            message: "There are no more reports",
+          });
+        }
+
+        const offset = (req.query.page - 1) * req.query.limit;
+
+        hashtagsAutoComplete(
+          req.query.q.replace(/\+/g, " "),
+          req.query.limit,
+          offset,
+          (err, allHashtags) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong ",
+              });
+            }
+
+            const hashtags = allHashtags.map((row) => row.reportHashtags);
+            const finalHastagArray = [];
+
+            hashtags.forEach((str) => {
+              const hashtagsTemp = str.split(",");
+              finalHastagArray.push(...hashtagsTemp);
+            });
+
+            const filteredHashtags = [
+              ...new Set(
+                finalHastagArray.filter((hashtag) =>
+                  hashtag
+                    .toLowerCase()
+                    .includes(req.query.q.replace(/\+/g, " ").toLowerCase())
+                )
+              ),
+            ];
+
+            // console.log(allHashtags);
+
+            return res.json({
+              success: false,
+              message: "Got all hashtags",
+              totalPage: totalPage,
+              hashtags: filteredHashtags,
+            });
+          }
+        );
+      }
+    );
   },
 };
