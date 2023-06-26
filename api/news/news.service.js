@@ -110,7 +110,7 @@ module.exports = {
     // console.log(timestamp);
     const reportID = generateContentId();
     pool.query(
-      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID)values(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID, reportCat)values(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         reportID,
         images,
@@ -125,6 +125,7 @@ module.exports = {
         0,
         data.reportBlocID,
         data.reportUsrID,
+        data.reportCat,
       ],
       (error, results, fields) => {
         if (error) {
@@ -772,6 +773,34 @@ module.exports = {
         }
 
         return callback(null, result);
+      }
+    );
+  },
+
+  searchReportByCategory: (category, limit, offset, callback) => {
+    pool.query(
+      `SELECT rd.*, bd.* FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportCat=? ORDER BY rd.reportUploadTime DESC, rd.reportDate DESC, rd.reportTime DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      [category],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  searchReportByCategoryCount: (category, callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS reportCount FROM report_details rd JOIN bloc_details bd ON rd.reportBlocID = bd.blocID WHERE rd.reportCat=?`,
+      [category],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
       }
     );
   },
