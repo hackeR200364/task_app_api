@@ -628,6 +628,32 @@ module.exports = {
     );
   },
 
+  reportSearchAutoComplete: (search_string, limit, offset, callback) => {
+    pool.query(
+      `SELECT reportID, reportTumbImage, reportUploadTime, reportHeadline, reportBlocID, reportLikes FROM report_details WHERE reportHeadline LIKE '%${search_string}%' OR reportDes LIKE '%${search_string}%' ORDER BY reportUploadTime DESC LIMIT ${+limit} OFFSET ${+offset}`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  reportSearchAutoCompleteCount: (search_string, callback) => {
+    pool.query(
+      `SELECT COUNT(*) AS reportsCount FROM report_details WHERE reportHeadline LIKE '%${search_string}%' OR reportDes LIKE '%${search_string}%' ORDER BY reportUploadTime DESC`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
   searchReporters: (search_string, limit, offset, callback) => {
     pool.query(
       `SELECT * FROM bloc_details WHERE usrName LIKE '%${search_string}%' OR usrID LIKE '%${search_string}%' OR usrEmail LIKE '%${search_string}%' OR blocID LIKE '%${search_string}%' OR blocName LIKE '%${search_string}%' OR blocDes LIKE '%${search_string}%' OR usrPhoneNo LIKE '%${search_string}%' ORDER BY followers DESC, reportsCount DESC LIMIT ${+limit} OFFSET ${+offset}`,
