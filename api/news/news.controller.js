@@ -50,6 +50,7 @@ const {
   notificationsCount,
   searchReportByCategoryCount,
   searchReportByCategory,
+  allCategories,
 } = require("./news.service");
 const res = require("express/lib/response");
 const natural = require("natural");
@@ -2262,6 +2263,24 @@ module.exports = {
           });
         }
       );
+    });
+  },
+
+  reportCategories: (req, res) => {
+    allCategories((err, categories) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong ",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Got all categories",
+        categories: categories,
+      });
     });
   },
 };
