@@ -27,6 +27,7 @@ const {
   addNotifications,
   notifications,
   searchReportByCat,
+  reportCategories,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -167,3 +168,6 @@ newsRouter.post("/notification/add", addNotifications);
 
 //get all notifications
 newsRouter.get("/notifications/:usrID", notifications);
+
+//get all report categories
+newsRouter.get("/categories", reportCategories);

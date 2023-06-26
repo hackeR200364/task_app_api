@@ -804,4 +804,17 @@ module.exports = {
       }
     );
   },
+
+  allCategories: (callback) => {
+    pool.query(
+      `SELECT DISTINCT reportCat FROM report_details`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
 };
