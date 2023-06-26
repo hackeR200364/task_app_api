@@ -105,12 +105,12 @@ module.exports = {
     );
   },
 
-  newsPost: (data, images, thumbImage, callback) => {
+  newsPost: (data, images, thumbImage, hashtags, callback) => {
     // const timestamp = Math.floor(Date.now() / 1000);
     // console.log(timestamp);
     const reportID = generateContentId();
     pool.query(
-      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID, reportCat)values(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `insert into report_details(reportID,  reportImages, reportTumbImage, reportDate, reportTime, reportHeadline, reportDes, reportLocation, reportLikes, reportComments, reportSaved, reportBlocID, reportUsrID, reportCat, reportHashtags)values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         reportID,
         images,
@@ -126,6 +126,7 @@ module.exports = {
         data.reportBlocID,
         data.reportUsrID,
         data.reportCat,
+        hashtags,
       ],
       (error, results, fields) => {
         if (error) {

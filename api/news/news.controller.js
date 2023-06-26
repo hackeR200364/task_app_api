@@ -174,7 +174,7 @@ module.exports = {
     const files = req.files.reportImages;
     const downloadLinks = [];
     const baseURL = `${req.protocol}://${req.hostname}/v1/production/news`;
-    const thumbImageLinkString = `${baseURL}/${req.files.reportTumbImage[0].filename}`;
+    // const thumbImageLinkString = `${baseURL}/${req.files.reportTumbImage[0].filename}`;
     let fileName;
     let reportPicLink;
 
@@ -182,16 +182,21 @@ module.exports = {
       fileName = file.filename;
       reportPicLink = `${baseURL}/${fileName}`;
       downloadLinks.push(reportPicLink);
-      // console.log(fileName);
     });
 
-    const downloadLinksString = downloadLinks.join(",");
+    // const downloadLinksString = downloadLinks.join(",");
     // console.log();
+
+    // const reportParas = req.body.reportHeadline + req.body.reportDes;
+    // const hashtags = extractHashtags(
+    //   req.body.reportHeadline + req.body.reportDes
+    // ).join(",");
 
     newsPost(
       req.body,
-      downloadLinksString,
-      thumbImageLinkString,
+      downloadLinks.join(","),
+      `${baseURL}/${req.files.reportTumbImage[0].filename}`,
+      extractHashtags(req.body.reportHeadline + " " + req.body.reportDes).join(","),
       (err, result) => {
         if (err) {
           console.error(err);
@@ -202,7 +207,7 @@ module.exports = {
         }
 
         // console.log(downloadLinksString.split(","));
-        console.log(result);
+        // console.log(result);
 
         newsCountIncrease(req.body.reportUsrID, (err, result) => {
           if (err) {
@@ -257,7 +262,7 @@ module.exports = {
             });
           }
 
-          console.log(likedReportsList);
+          // console.log(likedReportsList);
 
           // const likedRecordSet = new Set(
           //   likedReportsList.map((record) => record.reportID)
@@ -271,7 +276,7 @@ module.exports = {
               )
           );
 
-          console.error(likedRecordSet);
+          // console.error(likedRecordSet);
 
           const liked = likedRecordSet.has(req.params.reportID);
 
