@@ -26,6 +26,7 @@ const {
   recentReports,
   addNotifications,
   notifications,
+  searchReportByCat,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -77,38 +78,92 @@ const newsUpload = newsPicsUpload.fields([
 
 module.exports = newsRouter;
 
-newsRouter.post("/createBloc", upload.single("blocProfile"), createBloc);
-newsRouter.post("/postNews", newsUpload, postReport);
+//bloc creation
+newsRouter.post("/create", upload.single("blocProfile"), createBloc);
+
+//add reports
+newsRouter.post("/report/add", newsUpload, postReport);
+
+//all details of a particular report
 newsRouter.get(
-  "/getReportDetails/:reportUsrID/:reportID/:usrID",
+  "/report/details/:reportUsrID/:reportID/:usrID",
   reportAllDetails
 );
-newsRouter.post("/likeReport/:usrID/:reportID/:blocID", particularReportLike);
-newsRouter.post("/reportCommentPost", particularReportCommentPost);
+
+//get all reports
+newsRouter.get("/reports/all/:usrID", allReports);
+
+//get all trending reports
+newsRouter.get("/reports/trending/:usrID", trendingReports);
+
+//get all top reports
+newsRouter.get("/reports/top/:usrID", topReports);
+
+//get all recents reports
+newsRouter.get("/reports/recents", recentReports);
+
+//get all top reports of a particular bloc
+newsRouter.get("/reports/bloc/top/:blocID/:usrID", blocTopReports);
+
+//get all reports of a particular bloc
+newsRouter.get("/reports/bloc/all/:blocID/:usrID", blocReports);
+
+//get all liked reports by a particular usr
+newsRouter.get("/reports/liked/usr/:likedByUsrID", likedReportsByUsr);
+
+//get all top reports by searching
+newsRouter.get("/reports/top/search/:usrID", topReportsSearch);
+
+//get all reports by searching
+newsRouter.get("/reports/all/search/:usrID", allReportsSearch);
+
+//get all reports by searching by category
+newsRouter.get("/reports/category/search/:usrID", searchReportByCat);
+
+//get all reporters by searching
+newsRouter.get("/reporters/search/:fromUsrID", reportersSearch);
+
+//like a particular report
+newsRouter.post("/report/like/:usrID/:reportID/:blocID", particularReportLike);
+
+//delete like a particular report
 newsRouter.post(
-  "/reportCommentDelete/:commentID/:reportID",
-  particularReportCommentDelete
-);
-newsRouter.get("/comments/:reportID", commentList);
-newsRouter.get("/allReports/:usrID", allReports);
-newsRouter.post(
-  "/reportLikeDelete/:usrID/:reportID",
+  "/report/like/delete/:usrID/:reportID",
   particularReportLikeDelete
 );
-newsRouter.post("/saveReport", saveReport);
-newsRouter.post("/unsaveReport/:reportID/:fromUsrID", unsaveReport);
+
+//add comment to a particular report
+newsRouter.post("/report/comment/add", particularReportCommentPost);
+
+//delete comment to a particular report
+newsRouter.post(
+  "/report/comment/delete/:commentID/:reportID",
+  particularReportCommentDelete
+);
+
+//get all comments of a particular reports
+newsRouter.get("/comments/:reportID", commentList);
+
+//save a particular report
+newsRouter.post("/report/save", saveReport);
+
+//unsave a particular report
+newsRouter.post("/report/unsave/:reportID/:fromUsrID", unsaveReport);
+
+//follow a particular bloc
 newsRouter.post("/follow", followBloc);
+
+//unfollow a particular bloc
 newsRouter.post("/unfollow/:blocID/:fromUsrID", unfollowBloc);
-newsRouter.get("/trendingReports/:usrID", trendingReports);
-newsRouter.get("/topReports/:usrID", topReports);
-newsRouter.get("/blocTopReports/:blocID/:usrID", blocTopReports);
-newsRouter.get("/blocReports/:blocID/:usrID", blocReports);
-newsRouter.get("/usrLikedReports/:likedByUsrID", likedReportsByUsr);
-newsRouter.get("/blocDetails/:blocID/:usrID/:fromUsrID", particularBlocDetails);
-newsRouter.get("/searchTopReports/:usrID", topReportsSearch);
-newsRouter.get("/searchAllReports/:usrID", allReportsSearch);
-newsRouter.get("/reporters/:fromUsrID", reportersSearch);
-newsRouter.get("/reporters/:fromUsrID", reportersSearch);
-newsRouter.get("/recentReports", recentReports);
-newsRouter.post("/addNotification", addNotifications);
+
+//get all details of a particular bloc
+newsRouter.get(
+  "/bloc/details/:blocID/:usrID/:fromUsrID",
+  particularBlocDetails
+);
+
+//add new notification
+newsRouter.post("/notification/add", addNotifications);
+
+//get all notifications
 newsRouter.get("/notifications/:usrID", notifications);
