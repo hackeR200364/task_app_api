@@ -29,6 +29,7 @@ const {
   searchReportByCat,
   reportCategories,
   reportSearchAutocomplete,
+  reporterSearchAutocomplete,
 } = require("./news.controller");
 
 const multer = require("multer");
@@ -175,3 +176,6 @@ newsRouter.get("/categories", reportCategories);
 
 //report searching autocomplete
 newsRouter.get("/reports/search/autocomplete", reportSearchAutocomplete);
+
+//reporters searching autocomplete
+newsRouter.get("/reporters/autocomplete", reporterSearchAutocomplete);
