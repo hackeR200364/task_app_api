@@ -2154,12 +2154,113 @@ module.exports = {
           });
         }
 
-        return res.json({
-          success: true,
-          message: "Got recent reports",
-          totalPage: totalPage,
-          reports: reports,
+        allLikedReports(req.params.usrID, (err, likedReportsList) => {
+          if (err) {
+            console.log(err);
+            return res.json({
+              success: false,
+              message: "No liked reports",
+            });
+          }
+
+          if (likedReportsList.length < 1) {
+            return res.json({
+              success: true,
+              totalPage: totalPage,
+              reports: reports,
+            });
+          }
+
+          const likedRecordSet = new Set(
+            likedReportsList.map((record) => record.reportID)
+          );
+
+          const reportsWithLikedStatus = reports.map((report) => {
+            const liked = likedRecordSet.has(report.reportID);
+            return { ...report, liked: liked };
+          });
+
+          allcommentedReports(req.params.usrID, (err, commentedReportsList) => {
+            if (err) {
+              console.error(err);
+              return res.json({
+                success: false,
+                message: "Something went wrong",
+              });
+            }
+
+            if (commentedReportsList.length < 1) {
+              return res.json({
+                success: true,
+                totalPage: totalPage,
+                reports: reportsWithLikedStatus,
+              });
+            }
+
+            const commentedRecordSet = new Set(
+              commentedReportsList.map((record) => record.reportID)
+            );
+
+            const reportsWithCommentedStatus = reportsWithLikedStatus.map(
+              (report) => {
+                const commented = commentedRecordSet.has(report.reportID);
+                return { ...report, commented: commented };
+              }
+            );
+
+            particularUsrFollowedBloc(
+              req.params.usrID,
+              (err, followedBlocs) => {
+                if (err) {
+                  console.error(err);
+                  return res.json({
+                    success: false,
+                    message: "Something went wrong ",
+                  });
+                }
+
+                if (followedBlocs.length < 1) {
+                  return res.json({
+                    success: true,
+                    totalPage: totalPage,
+                    reports: reportsWithCommentedStatus,
+                  });
+                }
+
+                const followedRecordSet = new Set(
+                  followedBlocs.map((record) => record.blocID)
+                );
+
+                const reportersWithFollowedStatus =
+                  reportsWithCommentedStatus.map((report) => {
+                    const followed = followedRecordSet.has(report.reportBlocID);
+                    return { ...report, followed: followed };
+                  });
+
+                return res.json({
+                  success: true,
+                  message: "Got recent reports",
+                  totalPage: totalPage,
+                  reports: reportersWithFollowedStatus,
+                });
+              }
+            );
+
+            // return res.json({
+            //   success: true,
+            //   message: "Got trending reports",
+            //   totalPage: totalPage,
+            //   reports: reportsWithCommentedStatus,
+            // });
+          });
         });
+
+        // return res.json({
+        //   success: true,
+        //   message: "Got recent reports",
+        //   totalPage: totalPage,
+        //   reports: reports,
+        // });
       });
     });
   },

@@ -20,7 +20,7 @@ const {
   resend,
 } = require("../users/user.service");
 
-const { genSaltSync, hashSync, compareSync } = require("bcrypt");
+const { genSaltSync, hashSync, compareSync } = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 const fs = require("fs");
 const multer = require("multer");
