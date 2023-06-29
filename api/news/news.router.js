@@ -104,7 +104,7 @@ newsRouter.get("/reports/trending/:usrID",checkToken, trendingReports);
 newsRouter.get("/reports/top/:usrID",checkToken, topReports);
 
 //get all recents reports
-newsRouter.get("/reports/recents",checkToken, recentReports);
+newsRouter.get("/reports/recent/:usrID",checkToken, recentReports);
 
 //get all top reports of a particular bloc
 newsRouter.get("/reports/bloc/top/:blocID/:usrID",checkToken, blocTopReports);
