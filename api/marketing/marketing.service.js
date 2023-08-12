@@ -55,4 +55,31 @@ module.exports = {
       }
     );
   },
+
+  getEmails: (limit, offset, callback) => {
+    pool.query(
+      `Select * from marketing_emails limit ? offset ?`,
+      [+limit, +offset],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  getEmailsCount: (callback) => {
+    pool.query(
+      `Select count(*) as count from marketing_emails`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };

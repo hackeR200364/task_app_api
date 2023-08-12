@@ -3,6 +3,8 @@ const {
   createTopic,
   topicByName,
   loginAdmin,
+  getEmails,
+  getEmailsCount,
 } = require("../marketing/marketing.service");
 
 function extractDomainFromEmail(email) {
@@ -89,6 +91,38 @@ module.exports = {
           message: "This topic is already subscribed",
         });
       }
+    });
+  },
+
+  getEmails: (req, res) => {
+    const offset = (req.query.page - 1) * req.query.limit;
+    getEmails(req.query.limit, offset, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      getEmailsCount((emailCountErr, emailCount) => {
+        if (emailCountErr) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        const totalPage = Math.ceil(+emailCount[0]?.count / req.query.limit);
+
+        return res.json({
+          success: false,
+          message: "Got all emails",
+          results: results,
+          totalPage: totalPage,
+        });
+      });
     });
   },
 };
