@@ -2299,6 +2299,8 @@ module.exports = {
         });
       }
 
+      console.error(notificationCount);
+
       if (notificationCount[0].notificationCount < 1) {
         return res.json({
           success: false,
