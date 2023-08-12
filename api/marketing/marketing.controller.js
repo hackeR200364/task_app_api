@@ -6,6 +6,18 @@ const {
   getEmails,
   getEmailsCount,
 } = require("../marketing/marketing.service");
+const nodemailer = require("nodemailer");
+
+const fromEmail = "hello@achivie.com";
+
+const transporter = nodemailer.createTransport({
+  host: "mail.achivie.com",
+  port: 465,
+  auth: {
+    user: fromEmail,
+    pass: "RbWl]kC?M8&^",
+  },
+});
 
 function extractDomainFromEmail(email) {
   const parts = email.split("@");
@@ -14,6 +26,77 @@ function extractDomainFromEmail(email) {
   } else {
     throw new Error("Invalid email format");
   }
+}
+
+function replacePlaceholders(inputString, emailData) {
+  const name = emailData.split("@")[0];
+  const replacementValues = {
+    name: name,
+    email: emailData,
+  };
+  return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
+    if (replacementValues.hasOwnProperty(placeholder)) {
+      return replacementValues[placeholder];
+    }
+    return `%${placeholder}%`;
+  });
+}
+
+function sendBulkEmails(subjectString, bodyString, emailList) {
+  emailList.forEach((emailData) => {
+    const subject = replacePlaceholders(subjectString, emailData);
+    const body = replacePlaceholders(bodyString, emailData);
+
+    const mailOptions = {
+      from: fromEmail,
+      to: emailData,
+      subject: subject,
+      text: body,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+  });
+}
+
+function sendBulkEmails(subjectString, bodyString, emailList) {
+  return new Promise((resolve, reject) => {
+    const errors = [];
+
+    emailList.forEach((emailData) => {
+      // const subject = replacePlaceholders(subjectString, emailData);
+      // const body = replacePlaceholders(bodyString, emailData);
+
+      const mailOptions = {
+        from: fromEmail,
+        to: emailData,
+        subject: replacePlaceholders(subjectString, emailData),
+        text: replacePlaceholders(bodyString, emailData),
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          errors.push({ email: emailData, error: error.message });
+        } else {
+          console.log("Email sent:", info.response);
+        }
+
+        // Check if all emails have been processed
+        if (
+          errors.length + (emailList.length - info.messageId) ===
+          emailList.length
+        ) {
+          resolve(errors); // Resolve with errors array
+        }
+      });
+    });
+  });
 }
 
 module.exports = {
@@ -124,5 +207,76 @@ module.exports = {
         });
       });
     });
+  },
+
+  sendEmails: (req, res) => {
+    // const subjectString = req.body.subjectString;
+    // const bodyString = req.body.bodyString;
+    // const emailList = req.body.emailList;
+    const errors = [];
+
+    req.body.emailList.forEach((emailData) => {
+      // const subject = replacePlaceholders(subjectString, emailData);
+      // const body = replacePlaceholders(bodyString, emailData);
+
+      const mailOptions = {
+        from: fromEmail,
+        to: emailData,
+        subject: replacePlaceholders(req.body.subjectString, emailData),
+        text: replacePlaceholders(req.body.bodyString, emailData),
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          errors.push({ email: emailData, error: error.message });
+        } else {
+          console.log("Email sent:", info.response);
+        }
+
+        if (errors.length > 0) {
+          return res.json({
+            success: false,
+            message: "Error happend",
+            errors: errors,
+          });
+        } else {
+          return res.json({
+            success: true,
+            message: "All emails sent",
+          });
+        }
+      });
+    });
+
+    // sendBulkEmails(
+    //   req.body.subjectString,
+    //   req.body.bodyString,
+    //   req.body.emailList
+    // )
+    //   .then((errors) => {
+    //     if (errors.length > 0) {
+    //       console.error("Errors occurred while sending emails:", errors);
+    //       return res.status(500).json({
+    //         success: false,
+    //         message: "Errors occurred while sending emails",
+    //         errors: errors,
+    //       });
+    //     } else {
+    //       console.log("All emails sent successfully.");
+    //       return res.status(200).json({
+    //         success: true,
+    //         message: "All emails sent successfully.",
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.error("An error occurred:", error);
+    //     return res.status(500).json({
+    //       success: false,
+    //       message: "An error occurred while sending emails",
+    //       error: error,
+    //     });
+    //   });
   },
 };
