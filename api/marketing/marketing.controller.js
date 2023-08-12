@@ -219,6 +219,9 @@ module.exports = {
         to: emailData,
         subject: replacePlaceholders(req.body.subjectString, emailData),
         text: replacePlaceholders(req.body.bodyString, emailData),
+        html: req.body.htmlString
+          ? replacePlaceholders(req.body.htmlString, emailData)
+          : undefined,
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
