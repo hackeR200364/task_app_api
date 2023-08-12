@@ -6,8 +6,11 @@ const {
   getEmails,
   getEmailsCount,
   updateSentEmailCount,
+  updateSentNotiCount,
 } = require("../marketing/marketing.service");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
+const { response } = require("express");
 
 const fromEmail = "hello@achivie.com";
 
@@ -252,5 +255,54 @@ module.exports = {
         }
       });
     });
+  },
+
+  sendNotificationsByTopic: (req, res) => {
+    const headers = {
+      Authorization:
+        "key=AAAAjARbMis:APA91bHlRyZM3ChZBGKcM49CmcCmJvJDjMpu7cDvcNobv9QpmaTskcG8oKRLCC4nFf-B8nsaA0gQlvXERjRfVNagQvSuvsAY6j5zPrjhmKKi5DuPwZQhNG3n-zRk3w1C0hlDZr4GSLBm",
+      "Content-Type": "application/json",
+    };
+
+    axios
+      .post(
+        "https://fcm.googleapis.com/fcm/send",
+        {
+          to: `/topics/${req.body.topicName}`,
+          notification: {
+            title: req.body.title,
+            body: req.body.body,
+            message: req.body.message,
+          },
+        },
+        {
+          headers,
+        }
+      )
+      .then((response) => {
+        console.error("Response:", response.data);
+        updateSentNotiCount(req.body.topicName, (err, result) => {
+          if (err) {
+            return res.json({
+              success: false,
+              message: "Something went wrong",
+            });
+          }
+
+          return res.json({
+            success: true,
+            message: `All Notifications to topic ${req.body.topicName} are successfully sent.`,
+            response: response.data,
+          });
+        });
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+          errors: error,
+        });
+      });
   },
 };

@@ -96,4 +96,18 @@ module.exports = {
       }
     );
   },
+
+  updateSentNotiCount: (topicName, callback) => {
+    pool.query(
+      `Update topics notificationCount set notificationCount=notificationCount+1 where topicName=?`,
+      [topicName],
+      (err, result, field) => {
+        if (err) {
+          return callback(err);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };
