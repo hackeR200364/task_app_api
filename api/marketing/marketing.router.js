@@ -3,6 +3,7 @@ const {
   login,
   getEmails,
   sendEmails,
+  sendNotificationsByTopic,
 } = require("./marketing.controller");
 const express = require("express");
 const { checkToken } = require("../../auth/token_validation");
@@ -13,5 +14,6 @@ router.post("/topic/create", addTopic);
 router.post("/admin/login", login);
 router.post("/emails", getEmails);
 router.post("/emails/send", sendEmails);
+router.post("/notifications/send", sendNotificationsByTopic);
 
 module.exports = router;
