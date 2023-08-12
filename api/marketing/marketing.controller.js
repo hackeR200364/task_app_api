@@ -5,6 +5,7 @@ const {
   loginAdmin,
   getEmails,
   getEmailsCount,
+  updateSentEmailCount,
 } = require("../marketing/marketing.service");
 const nodemailer = require("nodemailer");
 
@@ -210,15 +211,9 @@ module.exports = {
   },
 
   sendEmails: (req, res) => {
-    // const subjectString = req.body.subjectString;
-    // const bodyString = req.body.bodyString;
-    // const emailList = req.body.emailList;
     const errors = [];
 
     req.body.emailList.forEach((emailData) => {
-      // const subject = replacePlaceholders(subjectString, emailData);
-      // const body = replacePlaceholders(bodyString, emailData);
-
       const mailOptions = {
         from: fromEmail,
         to: emailData,
@@ -232,6 +227,12 @@ module.exports = {
           errors.push({ email: emailData, error: error.message });
         } else {
           console.log("Email sent:", info.response);
+          updateSentEmailCount(emailData, (error, result) => {
+            if (error) {
+              console.error(error);
+              errors.push({ email: emailData, error: error });
+            }
+          });
         }
 
         if (errors.length > 0) {
@@ -248,35 +249,5 @@ module.exports = {
         }
       });
     });
-
-    // sendBulkEmails(
-    //   req.body.subjectString,
-    //   req.body.bodyString,
-    //   req.body.emailList
-    // )
-    //   .then((errors) => {
-    //     if (errors.length > 0) {
-    //       console.error("Errors occurred while sending emails:", errors);
-    //       return res.status(500).json({
-    //         success: false,
-    //         message: "Errors occurred while sending emails",
-    //         errors: errors,
-    //       });
-    //     } else {
-    //       console.log("All emails sent successfully.");
-    //       return res.status(200).json({
-    //         success: true,
-    //         message: "All emails sent successfully.",
-    //       });
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("An error occurred:", error);
-    //     return res.status(500).json({
-    //       success: false,
-    //       message: "An error occurred while sending emails",
-    //       error: error,
-    //     });
-    //   });
   },
 };

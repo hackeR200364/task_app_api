@@ -82,4 +82,18 @@ module.exports = {
       }
     );
   },
+
+  updateSentEmailCount: (email, callback) => {
+    pool.query(
+      `Update marketing_emails emailCount set emailCount=emailCount+1 where email=?`,
+      [email],
+      (err, result, field) => {
+        if (err) {
+          return callback(err);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
 };
