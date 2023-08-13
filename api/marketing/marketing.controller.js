@@ -3,14 +3,16 @@ const {
   createTopic,
   topicByName,
   loginAdmin,
-  getEmails,
-  getEmailsCount,
+  getEmailsMarketingCount,
   updateSentEmailCount,
   updateSentNotiCount,
   getAllDeviceTokens,
   getAllDeviceTokensCount,
   getAllTopicCount,
   getAllTopics,
+  getEmailsUsersCount,
+  getEmailsUsers,
+  getEmailsMarketing,
 } = require("../marketing/marketing.service");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
@@ -36,11 +38,25 @@ function extractDomainFromEmail(email) {
   }
 }
 
-function replacePlaceholdersEmails(inputString, emailData) {
+function replacePlaceholdersEmailsMarketing(inputString, emailData) {
   const name = emailData.split("@")[0];
   const replacementValues = {
     name: name,
     email: emailData,
+  };
+  return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
+    if (replacementValues.hasOwnProperty(placeholder)) {
+      return replacementValues[placeholder];
+    }
+    return `%${placeholder}%`;
+  });
+}
+
+function replacePlaceholdersEmailsUsers(inputString, emailData) {
+  const name = emailData.name;
+  const replacementValues = {
+    name: emailData.name,
+    email: emailData.email,
   };
   return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
     if (replacementValues.hasOwnProperty(placeholder)) {
@@ -141,9 +157,9 @@ module.exports = {
     });
   },
 
-  getEmails: (req, res) => {
+  getEmailsMarketing: (req, res) => {
     const offset = (req.query.page - 1) * req.query.limit;
-    getEmails(req.query.limit, offset, (err, results) => {
+    getEmailsMarketing(req.query.limit, offset, (err, results) => {
       if (err) {
         console.error(err);
         return res.json({
@@ -152,7 +168,7 @@ module.exports = {
         });
       }
 
-      getEmailsCount((emailCountErr, emailCount) => {
+      getEmailsMarketingCount((emailCountErr, emailCount) => {
         if (emailCountErr) {
           console.error(err);
           return res.json({
@@ -173,17 +189,55 @@ module.exports = {
     });
   },
 
-  sendEmails: (req, res) => {
+  getEmailsOfUsers: (req, res) => {
+    const offset = (req.query.page - 1) * req.query.limit;
+    getEmailsUsers(req.query.limit, offset, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      getEmailsUsersCount((emailCountErr, emailCount) => {
+        if (emailCountErr) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        const totalPage = Math.ceil(+emailCount[0]?.count / req.query.limit);
+
+        return res.json({
+          success: false,
+          message: "Got all emails",
+          results: results,
+          totalPage: totalPage,
+        });
+      });
+    });
+  },
+
+  sendEmailsMarketing: (req, res) => {
     const errors = [];
 
     req.body.emailList.forEach((emailData) => {
       const mailOptions = {
         from: fromEmail,
         to: emailData,
-        subject: replacePlaceholdersEmails(req.body.subjectString, emailData),
-        text: replacePlaceholdersEmails(req.body.bodyString, emailData),
+        subject: replacePlaceholdersEmailsMarketing(
+          req.body.subjectString,
+          emailData
+        ),
+        text: replacePlaceholdersEmailsMarketing(
+          req.body.bodyString,
+          emailData
+        ),
         html: req.body.htmlString
-          ? replacePlaceholdersEmails(req.body.htmlString, emailData)
+          ? replacePlaceholdersEmailsMarketing(req.body.htmlString, emailData)
           : undefined,
       };
 
@@ -199,6 +253,53 @@ module.exports = {
               errors.push({ email: emailData, error: error });
             }
           });
+        }
+
+        if (errors.length > 0) {
+          return res.json({
+            success: false,
+            message: "Error happend",
+            errors: errors,
+          });
+        } else {
+          return res.json({
+            success: true,
+            message: "All emails sent",
+          });
+        }
+      });
+    });
+  },
+
+  sendEmailsUsers: (req, res) => {
+    const errors = [];
+
+    req.body.emailList.forEach((emailData) => {
+      const mailOptions = {
+        from: fromEmail,
+        to: emailData.email,
+        subject: replacePlaceholdersEmailsUsers(
+          req.body.subjectString,
+          emailData
+        ),
+        text: replacePlaceholdersEmailsUsers(req.body.bodyString, emailData),
+        html: req.body.htmlString
+          ? replacePlaceholdersEmailsUsers(req.body.htmlString, emailData)
+          : undefined,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          errors.push({ email: emailData, error: error.message });
+        } else {
+          console.log("Email sent:", info.response);
+          // updateSentEmailCount(emailData, (error, result) => {
+          //   if (error) {
+          //     console.error(error);
+          //     errors.push({ email: emailData, error: error });
+          //   }
+          // });
         }
 
         if (errors.length > 0) {
