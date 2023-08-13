@@ -56,7 +56,7 @@ module.exports = {
     );
   },
 
-  getEmails: (limit, offset, callback) => {
+  getEmailsMarketing: (limit, offset, callback) => {
     pool.query(
       `Select * from marketing_emails limit ? offset ?`,
       [+limit, +offset],
@@ -70,9 +70,36 @@ module.exports = {
     );
   },
 
-  getEmailsCount: (callback) => {
+  getEmailsUsers: (limit, offset, callback) => {
+    pool.query(
+      `SELECT usrFirstName, usrLastName, uid, notificationToken, usrProfilePic, usrDescription, usrProfession, usrEmail FROM users WHERE usrEmail <> '' LIMIT ? OFFSET ?`,
+      [+limit, +offset],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  getEmailsMarketingCount: (callback) => {
     pool.query(
       `Select count(*) as count from marketing_emails`,
+      (error, result, field) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, result);
+      }
+    );
+  },
+
+  getEmailsUsersCount: (callback) => {
+    pool.query(
+      `Select count(*) as count from users WHERE usrEmail <> ''`,
       (error, result, field) => {
         if (error) {
           return callback(error);
