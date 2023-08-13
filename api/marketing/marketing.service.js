@@ -110,4 +110,31 @@ module.exports = {
       }
     );
   },
+
+  getAllDeviceTokens: (limit, offset, callback) => {
+    pool.query(
+      `SELECT usrFirstName, usrLastName, uid, notificationToken, usrProfilePic, usrDescription, usrProfession, usrEmail FROM users WHERE notificationToken <> '' LIMIT ? OFFSET ?`,
+      [+limit, +offset],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  getAllDeviceTokensCount: (callback) => {
+    pool.query(
+      `Select count(*) as count from users where notificationToken <> ''`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
 };
