@@ -137,4 +137,31 @@ module.exports = {
       }
     );
   },
+
+  getAllTopics: (limit, offset, callback) => {
+    pool.query(
+      `SELECT * FROM topics LIMIT ? OFFSET ?`,
+      [+limit, +offset],
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
+  getAllTopicCount: (callback) => {
+    pool.query(
+      `SELECT count(*) as count FROM topics`,
+      (error, results, fields) => {
+        if (error) {
+          return callback(error);
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
 };
