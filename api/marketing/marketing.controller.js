@@ -36,7 +36,7 @@ function extractDomainFromEmail(email) {
   }
 }
 
-function replacePlaceholders(inputString, emailData) {
+function replacePlaceholdersEmails(inputString, emailData) {
   const name = emailData.split("@")[0];
   const replacementValues = {
     name: name,
@@ -50,60 +50,16 @@ function replacePlaceholders(inputString, emailData) {
   });
 }
 
-function sendBulkEmails(subjectString, bodyString, emailList) {
-  emailList.forEach((emailData) => {
-    const subject = replacePlaceholders(subjectString, emailData);
-    const body = replacePlaceholders(bodyString, emailData);
-
-    const mailOptions = {
-      from: fromEmail,
-      to: emailData,
-      subject: subject,
-      text: body,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-      } else {
-        console.log("Email sent:", info.response);
-      }
-    });
-  });
-}
-
-function sendBulkEmails(subjectString, bodyString, emailList) {
-  return new Promise((resolve, reject) => {
-    const errors = [];
-
-    emailList.forEach((emailData) => {
-      // const subject = replacePlaceholders(subjectString, emailData);
-      // const body = replacePlaceholders(bodyString, emailData);
-
-      const mailOptions = {
-        from: fromEmail,
-        to: emailData,
-        subject: replacePlaceholders(subjectString, emailData),
-        text: replacePlaceholders(bodyString, emailData),
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error);
-          errors.push({ email: emailData, error: error.message });
-        } else {
-          console.log("Email sent:", info.response);
-        }
-
-        // Check if all emails have been processed
-        if (
-          errors.length + (emailList.length - info.messageId) ===
-          emailList.length
-        ) {
-          resolve(errors); // Resolve with errors array
-        }
-      });
-    });
+function replacePlaceholdersNotifications(inputString, tokenData) {
+  const replacementValues = {
+    name: tokenData.name,
+    email: tokenData.email,
+  };
+  return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
+    if (replacementValues.hasOwnProperty(placeholder)) {
+      return replacementValues[placeholder];
+    }
+    return `%${placeholder}%`;
   });
 }
 
@@ -224,10 +180,10 @@ module.exports = {
       const mailOptions = {
         from: fromEmail,
         to: emailData,
-        subject: replacePlaceholders(req.body.subjectString, emailData),
-        text: replacePlaceholders(req.body.bodyString, emailData),
+        subject: replacePlaceholdersEmails(req.body.subjectString, emailData),
+        text: replacePlaceholdersEmails(req.body.bodyString, emailData),
         html: req.body.htmlString
-          ? replacePlaceholders(req.body.htmlString, emailData)
+          ? replacePlaceholdersEmails(req.body.htmlString, emailData)
           : undefined,
       };
 
@@ -373,6 +329,114 @@ module.exports = {
           data: topic,
         });
       });
+    });
+  },
+
+  sendNotificationsByToken: (req, res) => {
+    const headers = {
+      Authorization:
+        "key=AAAAjARbMis:APA91bHlRyZM3ChZBGKcM49CmcCmJvJDjMpu7cDvcNobv9QpmaTskcG8oKRLCC4nFf-B8nsaA0gQlvXERjRfVNagQvSuvsAY6j5zPrjhmKKi5DuPwZQhNG3n-zRk3w1C0hlDZr4GSLBm",
+      "Content-Type": "application/json",
+    };
+
+    axios
+      .post(
+        "https://fcm.googleapis.com/fcm/send",
+        {
+          to: `${req.body.deviceToken}`,
+          notification: {
+            title: req.body.title,
+            body: req.body.body,
+            message: req.body.message,
+          },
+        },
+        {
+          headers,
+        }
+      )
+      .then((response) => {
+        // console.error("Response:", response.data);
+        return res.json({
+          success: true,
+          message: "Notification sent successfully",
+          response: response.data,
+        });
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+          errors: error,
+        });
+      });
+  },
+
+  sendNotificationsByTokenList: (req, res) => {
+    const headers = {
+      Authorization:
+        "key=AAAAjARbMis:APA91bHlRyZM3ChZBGKcM49CmcCmJvJDjMpu7cDvcNobv9QpmaTskcG8oKRLCC4nFf-B8nsaA0gQlvXERjRfVNagQvSuvsAY6j5zPrjhmKKi5DuPwZQhNG3n-zRk3w1C0hlDZr4GSLBm",
+      "Content-Type": "application/json",
+    };
+    const errors = [];
+    const success = [];
+
+    req.body.tokens.forEach((tokenData) => {
+      axios
+        .post(
+          "https://fcm.googleapis.com/fcm/send",
+          {
+            to: `${tokenData.token}`,
+            notification: {
+              title: replacePlaceholdersNotifications(
+                req.body.title,
+                tokenData
+              ),
+              body: replacePlaceholdersNotifications(req.body.body, tokenData),
+              message: replacePlaceholdersNotifications(
+                req.body.message,
+                tokenData
+              ),
+            },
+          },
+          {
+            headers,
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          success.push({ tokenData: tokenData, response: response.data });
+          // console.error("Response:", response.data);
+          // return res.json({
+          //   success: true,
+          //   message: "Notification sent successfully",
+          //   response: response.data,
+          // });
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          errors.push({ email: tokenData, error: error });
+
+          // return res.json({
+          //   success: false,
+          //   message: "Something went wrong",
+          //   errors: error,
+          // });
+        });
+
+      if (errors.length > 0) {
+        return res.json({
+          success: false,
+          message: "Error happend",
+          errors: errors,
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: "All notifications sent",
+          responses: success,
+        });
+      }
     });
   },
 };
