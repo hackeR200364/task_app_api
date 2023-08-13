@@ -7,6 +7,8 @@ const {
   getEmailsCount,
   updateSentEmailCount,
   updateSentNotiCount,
+  getAllDeviceTokens,
+  getAllDeviceTokensCount,
 } = require("../marketing/marketing.service");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
@@ -304,5 +306,38 @@ module.exports = {
           errors: error,
         });
       });
+  },
+
+  getDeviceTokens: (req, res) => {
+    const offset = (req.query.page - 1) * req.query.limit;
+    getAllDeviceTokensCount((tokenErr, tokenCount) => {
+      if (tokenErr) {
+        console.error(tokenErr);
+        return res.json({
+          success: false,
+          message: "Something went wrong",
+        });
+      }
+
+      getAllDeviceTokens(req.query.limit, offset, (err, tokens) => {
+        if (err) {
+          console.error(err);
+          return res.json({
+            success: false,
+            message: "Something went wrong",
+          });
+        }
+
+        // console.log(tokenCount);
+
+        const totalPage = Math.ceil(+tokenCount[0]?.count / req.query.limit);
+        return res.json({
+          success: true,
+          message: "Get all tokens",
+          totalPage: totalPage,
+          data: tokens,
+        });
+      });
+    });
   },
 };
