@@ -17,15 +17,19 @@ const { checkToken } = require("../../auth/token_validation");
 const router = express.Router();
 
 router.post("/admin/login", login);
-router.get("/emails/marketing", getEmailsMarketing);
-router.get("/emails/users", getEmailsOfUsers);
-router.post("/emails/marketing/send", sendEmailsMarketing);
-router.post("/emails/users/send", sendEmailsUsers);
-router.post("/notifications/topic/send", sendNotificationsByTopic);
-router.post("/notifications/topic/create", addTopic);
-router.get("/notifications/tokens", getDeviceTokens);
-router.get("/notifications/topics", getTopics);
-router.post("/notifications/token/send", sendNotificationsByToken);
-router.post("/notifications/token/list/send", sendNotificationsByTokenList);
+router.get("/emails/marketing",checkToken, getEmailsMarketing);
+router.get("/emails/users", checkToken, getEmailsOfUsers);
+router.post("/emails/marketing/send", checkToken, sendEmailsMarketing);
+router.post("/emails/users/send", checkToken, sendEmailsUsers);
+router.post("/notifications/topic/send", checkToken, sendNotificationsByTopic);
+router.post("/notifications/topic/create", checkToken, addTopic);
+router.get("/notifications/tokens", checkToken, getDeviceTokens);
+router.get("/notifications/topics", checkToken, getTopics);
+router.post("/notifications/token/send", checkToken, sendNotificationsByToken);
+router.post(
+  "/notifications/token/list/send",
+  checkToken,
+  sendNotificationsByTokenList
+);
 
 module.exports = router;

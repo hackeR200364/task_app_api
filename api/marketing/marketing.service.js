@@ -16,7 +16,7 @@ module.exports = {
   loginAdmin: (data, callback) => {
     pool.query(
       `select * from organization_admins where admin_email=?`,
-      [data.email, data.password],
+      [data.email],
       (error, result, fields) => {
         if (error) {
           return callback(error);
