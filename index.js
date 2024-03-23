@@ -5,6 +5,8 @@ const userRouter = require("./api/users/user.router");
 const tasksRouter = require("./api/tasks/tasks.router");
 const newsRouter = require("./api/news/news.router");
 const marketingRouter = require("./api/marketing/marketing.router");
+const chatGPTRouter = require("./api/chatGPT/chatGPT.router");
+
 // const expressLayouts = require("express-ejs-layouts");
 // const WebSocket = require("ws");
 // const server = require("http").createServer(app);
@@ -31,6 +33,7 @@ app.use("/v1/production/api/users", userRouter);
 app.use("/v1/production/api/tasks", tasksRouter);
 app.use("/v1/production/api/newsBloc", newsRouter);
 app.use("/v1/production/api/marketing", marketingRouter);
+app.use("/v1/production/api/chatGPT", chatGPTRouter);
 app.use("/v1/production/profile", express.static("profilePics"));
 app.use("/v1/production/bloc", express.static("blocPics"));
 app.use("/v1/production/news", express.static("newsPics"));

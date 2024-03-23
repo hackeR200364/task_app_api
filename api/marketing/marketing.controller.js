@@ -16,16 +16,27 @@ const {
 } = require("../marketing/marketing.service");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
-const { response } = require("express");
+var jwt = require("jsonwebtoken");
 
-const fromEmail = "hello@achivie.com";
+const fromEmailMarketing = "hello@achivie.com";
+const fromEmailAlert = "team@achivie.com";
+var locationData;
 
-const transporter = nodemailer.createTransport({
+const transporterMarketing = nodemailer.createTransport({
   host: "mail.achivie.com",
   port: 465,
   auth: {
-    user: fromEmail,
+    user: fromEmailMarketing,
     pass: "RbWl]kC?M8&^",
+  },
+});
+
+const transporterAlert = nodemailer.createTransport({
+  host: "mail.achivie.com",
+  port: 465,
+  auth: {
+    user: fromEmailAlert,
+    pass: "QA5d9bYw_!MJ",
   },
 });
 
@@ -38,10 +49,20 @@ function extractDomainFromEmail(email) {
   }
 }
 
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function capitalizeWords(str) {
+  return str.replace(/(?:^|\s)\S/g, function (a) {
+    return a.toUpperCase();
+  });
+}
+
 function replacePlaceholdersEmailsMarketing(inputString, emailData) {
   const name = emailData.split("@")[0];
   const replacementValues = {
-    name: name,
+    name: capitalizeFirstLetter(name),
     email: emailData,
   };
   return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
@@ -53,9 +74,8 @@ function replacePlaceholdersEmailsMarketing(inputString, emailData) {
 }
 
 function replacePlaceholdersEmailsUsers(inputString, emailData) {
-  const name = emailData.name;
   const replacementValues = {
-    name: emailData.name,
+    name: capitalizeWords(emailData.name),
     email: emailData.email,
   };
   return inputString.replace(/%([^%]+)%/g, (_, placeholder) => {
@@ -99,11 +119,157 @@ module.exports = {
           });
         } else {
           if (req.body.password === results[0].admin_password) {
-            return res.json({
-              success: true,
-              message: "Got your admin account",
-              data: results[0],
-            });
+            axios
+              .get(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${req.body.lat}&lon=${req.body.long}`
+              )
+              .then((response) => {
+                locationData = response.data;
+                console.log("Location Data:", locationData.display_name);
+
+                if (locationData) {
+                  // console.log("Location Data:", locationData);
+                  const mailOptions = {
+                    from: fromEmailAlert,
+                    to: req.body.email,
+                    subject: `Login Alert`,
+                    html: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: #007BFF;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .content p {
+            color: #333333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            background-color: #ffdddd;
+            border: 1px solid #ff9999;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        
+        .map {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .map img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        
+        .footer {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Login Alert</h1>
+        </div>
+        <div class="content">
+            <p>Dear ${results[0].admin_name},</p>
+            <p>We have detected a recent login to your account. If this was not you, please take immediate action to secure your account.</p>
+            <div class="alert">
+                <p><strong>Login Details:</strong></p>
+                <p><strong>Date and Time:</strong> ${req.body.time}</p>
+                <p><strong>Location:</strong><a href="https://www.google.com/maps/search/?api=1&query=${req.body.lat},${req.body.long}" target="_blank">${locationData.display_name}</a></p>
+                <p><strong>IP Address:</strong> ${req.body.ip}</p>
+            </div>
+            <p>If you authorized this login, you can disregard this email. If you suspect any unauthorized activity, please contact with us at team@achivie.com.</p>
+        </div>
+    </div>
+</body>
+</html>
+`,
+                  };
+
+                  transporterMarketing.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                      console.error("Error sending email:", error);
+                      errors.push({ email: emailData, error: error.message });
+                    } else {
+                      console.log("Email sent:", info.response);
+                      updateSentEmailCount(emailData, (error, result) => {
+                        if (error) {
+                          console.error(error);
+                          errors.push({ email: emailData, error: error });
+                        }
+                      });
+                    }
+
+                    if (errors.length > 0) {
+                      return res.json({
+                        success: false,
+                        message: "Error happend",
+                        errors: errors,
+                      });
+                    } else {
+                      return res.json({
+                        success: true,
+                        message: "All emails sent",
+                      });
+                    }
+                  });
+                  let secret = "qwe1234";
+                  const jsonToken = jwt.sign({ result: results[0] }, secret);
+                  console.error(jsonToken);
+                  return res.json({
+                    success: true,
+                    message: "Got your admin account",
+                    token: jsonToken,
+                    data: results[0],
+                  });
+                } else {
+                  console.log("Location not found");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error.message);
+              });
           } else {
             return res.json({
               success: false,
@@ -226,7 +392,7 @@ module.exports = {
 
     req.body.emailList.forEach((emailData) => {
       const mailOptions = {
-        from: fromEmail,
+        from: fromEmailMarketing,
         to: emailData,
         subject: replacePlaceholdersEmailsMarketing(
           req.body.subjectString,
@@ -241,7 +407,7 @@ module.exports = {
           : undefined,
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
+      transporterMarketing.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("Error sending email:", error);
           errors.push({ email: emailData, error: error.message });
@@ -254,21 +420,21 @@ module.exports = {
             }
           });
         }
-
-        if (errors.length > 0) {
-          return res.json({
-            success: false,
-            message: "Error happend",
-            errors: errors,
-          });
-        } else {
-          return res.json({
-            success: true,
-            message: "All emails sent",
-          });
-        }
       });
     });
+
+    if (errors.length > 0) {
+      return res.json({
+        success: false,
+        message: "Error happend",
+        errors: errors,
+      });
+    } else {
+      return res.json({
+        success: true,
+        message: "All emails sent",
+      });
+    }
   },
 
   sendEmailsUsers: (req, res) => {
@@ -276,7 +442,7 @@ module.exports = {
 
     req.body.emailList.forEach((emailData) => {
       const mailOptions = {
-        from: fromEmail,
+        from: fromEmailMarketing,
         to: emailData.email,
         subject: replacePlaceholdersEmailsUsers(
           req.body.subjectString,
@@ -288,7 +454,7 @@ module.exports = {
           : undefined,
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
+      transporterMarketing.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("Error sending email:", error);
           errors.push({ email: emailData, error: error.message });
@@ -301,21 +467,21 @@ module.exports = {
           //   }
           // });
         }
-
-        if (errors.length > 0) {
-          return res.json({
-            success: false,
-            message: "Error happend",
-            errors: errors,
-          });
-        } else {
-          return res.json({
-            success: true,
-            message: "All emails sent",
-          });
-        }
       });
     });
+
+    if (errors.length > 0) {
+      return res.json({
+        success: false,
+        message: "Error happend",
+        errors: errors,
+      });
+    } else {
+      return res.json({
+        success: true,
+        message: "All emails sent",
+      });
+    }
   },
 
   sendNotificationsByTopic: (req, res) => {
@@ -444,11 +610,20 @@ module.exports = {
       .post(
         "https://fcm.googleapis.com/fcm/send",
         {
-          to: `${req.body.deviceToken}`,
+          to: `${req.body.tokenData.token}`,
           notification: {
-            title: req.body.title,
-            body: req.body.body,
-            message: req.body.message,
+            title: replacePlaceholdersEmailsUsers(
+              req.body.title,
+              req.body.tokenData
+            ),
+            body: replacePlaceholdersEmailsUsers(
+              req.body.body,
+              req.body.tokenData
+            ),
+            message: replacePlaceholdersEmailsUsers(
+              req.body.message,
+              req.body.tokenData
+            ),
           },
         },
         {
@@ -473,18 +648,87 @@ module.exports = {
       });
   },
 
-  sendNotificationsByTokenList: (req, res) => {
+  // sendNotificationsByTokenList: (req, res) => {
+  //   const errors = [];
+  //   const success = [];
+
+  //   const headers = {
+  //     Authorization:
+  //       "key=AAAAjARbMis:APA91bHlRyZM3ChZBGKcM49CmcCmJvJDjMpu7cDvcNobv9QpmaTskcG8oKRLCC4nFf-B8nsaA0gQlvXERjRfVNagQvSuvsAY6j5zPrjhmKKi5DuPwZQhNG3n-zRk3w1C0hlDZr4GSLBm",
+  //     "Content-Type": "application/json",
+  //   };
+
+  //   req.body.tokenData.forEach((tokenData) => {
+  //     axios
+  //       .post(
+  //         "https://fcm.googleapis.com/fcm/send",
+  //         {
+  //           to: `${tokenData.token}`,
+  //           notification: {
+  //             title: replacePlaceholdersNotifications(
+  //               req.body.title,
+  //               tokenData
+  //             ),
+  //             body: replacePlaceholdersNotifications(req.body.body, tokenData),
+  //             message: replacePlaceholdersNotifications(
+  //               req.body.message,
+  //               tokenData
+  //             ),
+  //           },
+  //         },
+  //         {
+  //           headers,
+  //         }
+  //       )
+  //       .then((response) => {
+  //         console.log(response.data);
+  //         success.push({ tokenData: tokenData, response: response.data });
+  //         console.log(success.length);
+  //         // console.error("Response:", response.data);
+  //         // return res.json({
+  //         //   success: true,
+  //         //   message: "Notification sent successfully",
+  //         //   response: response.data,
+  //         // });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error:", error.message);
+  //         errors.push({ email: tokenData, error: error });
+
+  //         // return res.json({
+  //         //   success: false,
+  //         //   message: "Something went wrong",
+  //         //   errors: error,
+  //         // });
+  //       });
+  //   });
+
+  //   if (errors.length > 0) {
+  //     return res.json({
+  //       success: false,
+  //       message: "Error happend",
+  //       errors: errors,
+  //     });
+  //   } else {
+  //     return res.json({
+  //       success: true,
+  //       message: "All notifications sent",
+  //       responses: success,
+  //     });
+  //   }
+  // },
+
+  sendNotificationsByTokenList: async (req, res) => {
     const headers = {
       Authorization:
         "key=AAAAjARbMis:APA91bHlRyZM3ChZBGKcM49CmcCmJvJDjMpu7cDvcNobv9QpmaTskcG8oKRLCC4nFf-B8nsaA0gQlvXERjRfVNagQvSuvsAY6j5zPrjhmKKi5DuPwZQhNG3n-zRk3w1C0hlDZr4GSLBm",
       "Content-Type": "application/json",
     };
-    const errors = [];
-    const success = [];
 
-    req.body.tokens.forEach((tokenData) => {
-      axios
-        .post(
+    const tokenDataList = req.body.tokenData;
+    const requests = tokenDataList.map(async (tokenData) => {
+      try {
+        const response = await axios.post(
           "https://fcm.googleapis.com/fcm/send",
           {
             to: `${tokenData.token}`,
@@ -503,41 +747,37 @@ module.exports = {
           {
             headers,
           }
-        )
-        .then((response) => {
-          console.log(response.data);
-          success.push({ tokenData: tokenData, response: response.data });
-          // console.error("Response:", response.data);
-          // return res.json({
-          //   success: true,
-          //   message: "Notification sent successfully",
-          //   response: response.data,
-          // });
-        })
-        .catch((error) => {
-          console.error("Error:", error.message);
-          errors.push({ email: tokenData, error: error });
+        );
+        return { tokenData: tokenData, response: response.data };
+      } catch (error) {
+        console.error("Error:", error.message);
+        return { tokenData: tokenData, error: error.message };
+      }
+    });
 
-          // return res.json({
-          //   success: false,
-          //   message: "Something went wrong",
-          //   errors: error,
-          // });
-        });
+    try {
+      const responses = await Promise.all(requests);
+      const successResponses = responses.filter((response) => !response.error);
 
-      if (errors.length > 0) {
-        return res.json({
-          success: false,
-          message: "Error happend",
-          errors: errors,
-        });
-      } else {
+      if (successResponses.length > 0) {
         return res.json({
           success: true,
           message: "All notifications sent",
-          responses: success,
+          responses: successResponses,
+        });
+      } else {
+        return res.json({
+          success: false,
+          message: "Error happened",
+          errors: responses,
         });
       }
-    });
+    } catch (error) {
+      return res.json({
+        success: false,
+        message: "An error occurred",
+        error: error.message,
+      });
+    }
   },
 };
